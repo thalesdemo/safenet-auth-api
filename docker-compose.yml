@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  safenet-auth-api:
+    image: thalesdemo/safenet-auth-api-dev:0.0.2-arm64
+    container_name: safenet-auth-api
+    environment:
+      HOST_AGENT_KEY_PATH: ${HOST_AGENT_KEY_PATH}
+      SAFENET_SERVER_HOST: ${SAFENET_SERVER_HOST}
+      API_SERVER_PORT: ${API_SERVER_PORT}
+      API_LOG_LEVEL: ${API_LOG_LEVEL-INFO}
+      API_KEY_HASH: ${API_KEY_HASH-}
+      JCRYPTO_INI_PATH: /app/config/config.ini
+    volumes:
+      - type: bind
+        source: ${HOST_AGENT_KEY_PATH}
+        target: /app/secret/agent.key
+        read_only: true
+    ports:
+      - ${API_SERVER_PORT}:${API_SERVER_PORT}
