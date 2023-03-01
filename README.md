@@ -1,6 +1,6 @@
-🚀 Get Started with Our SafeNet RESTful Authentication Gateway on [Docker Hub](https://hub.docker.com/r/thalesdemo/safenet-auth-api).
-
 <h1>SafeNet RESTful Authentication Gateway</h1>
+
+🚀 Get Started with Our SafeNet RESTful Authentication Gateway on [Docker Hub](https://hub.docker.com/r/thalesdemo/safenet-auth-api)!
 
 <h2>Important Notice</h2>
 
