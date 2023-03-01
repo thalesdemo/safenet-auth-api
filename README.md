@@ -35,7 +35,7 @@ version: '3'
 
 services:
   safenet-auth-api:
-    image: thalesdemo/safenet-auth-api-dev:latest
+    image: thalesdemo/safenet-auth-api
     container_name: safenet-auth-api
     environment:
       HOST_AGENT_KEY_PATH: ${HOST_AGENT_KEY_PATH}
@@ -65,6 +65,8 @@ Then, follow the instructions that appear on the screen to get your unique clien
 <h2>API Reference</h2>
 
 To view the API documentation and all available endpoints, open your web browser and go to `http://localhost:8888`.
+
+![example.gif](https://github.com/thalesdemo/safenet-auth-api/blob/main/example.gif)
 
 <h2>Contact Us</h2>
 If you have any feedback to share or would like to request new features, please feel free to reach out to us at <a href="mailto:hello@onewelco.me">hello@onewelco.me</a>. We welcome your input!
