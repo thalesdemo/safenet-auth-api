@@ -20,7 +20,7 @@ RUN mkdir -p /app/tools
 
 # Set the working directory and copy your application files
 WORKDIR /app
-COPY target/auth.api-0.0.1.jar ./microservice.jar
+COPY jar/auth.api-0.0.1.jar ./microservice.jar
 COPY config/config.ini ./config/config.ini
 COPY tools/keygen-1.0.jar ./tools/keygen.jar
 COPY tools/start.sh .
