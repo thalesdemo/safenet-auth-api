@@ -66,12 +66,12 @@ public class SwaggerConfig {
     		  .addServersItem(serverInfo())
               .info(new Info().title("SafeNet RESTful Authentication Gateway")
               .description("This is a demo project to authenticate users against the SafeNet authentication platform using REST API endpoints.")
-              .version("v0.0.3")
+              .version("v0.0.1")
               .contact(new Contact().email("hello@onewelco.me"))
-              .license(new License().name("Apache 2.0").url("http://springdoc.org")))
+              .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0.html")))
               .externalDocs(new ExternalDocumentation()
               .description("SafeNet Authentication API Documentation (Git)")
-              .url("https://www.github.com/thalesdemo/safenet-auth-api/docs"));
+              .url("https://github.com/thalesdemo/safenet-auth-api"));
 	}
 	
 	

@@ -16,7 +16,7 @@
 	<properties>
 		<java.version>11</java.version>
 		<spring-security.version>5.6.10</spring-security.version>
-		<swagger.ui.version>4.15.5-c21</swagger.ui.version>
+		<swagger.ui.version>4.15.5-c22</swagger.ui.version>
 		<!-- <swagger.ui.path>/lib/swagger-ui-4.15.5-custom1.jar</swagger.ui.path>-->
 	</properties>
 	<dependencyManagement>
