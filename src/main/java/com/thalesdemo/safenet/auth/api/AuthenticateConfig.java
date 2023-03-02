@@ -22,6 +22,7 @@
  */
 package com.thalesdemo.safenet.auth.api;
 
+import java.util.Optional;
 import java.util.logging.Logger;
 
 import org.springframework.context.annotation.Bean;
@@ -59,7 +60,8 @@ public class AuthenticateConfig {
        Log.info("Registering configuration in @Bean Authenticate authenticate()...");
         
         // Check if the JCRYPTO_INI_PATH environment variable is set
-        JCRYPTO_INI_PATH = System.getenv("JCRYPTO_INI_PATH");
+        JCRYPTO_INI_PATH = Optional.ofNullable(System.getenv("JCRYPTO_INI_PATH"))
+        						   .orElse(System.getProperty("JCRYPTO_INI_PATH"));
         
         // If the environment variable is not set, set JCRYPTO_INI_PATH to the default value
         if(JCRYPTO_INI_PATH == null || JCRYPTO_INI_PATH.trim().isEmpty()) {
@@ -69,7 +71,8 @@ public class AuthenticateConfig {
         
         // This environment variable could be omitted or overridden.
         // If so, the requests must contain JSON `"organization: "your_org_name"` in the body request
-        final String JCRYPTO_DEFAULT_ORGANIZATION = System.getenv("JCRYPTO_DEFAULT_ORGANIZATION"); 
+        final String JCRYPTO_DEFAULT_ORGANIZATION = Optional.ofNullable(System.getenv("JCRYPTO_DEFAULT_ORGANIZATION"))
+        													.orElse(System.getProperty("JCRYPTO_DEFAULT_ORGANIZATION")); 
         
         // Return a new instance of Authenticate class with the default organization and the path to the INI file
         return new Authenticate(JCRYPTO_DEFAULT_ORGANIZATION, JCRYPTO_INI_PATH);
