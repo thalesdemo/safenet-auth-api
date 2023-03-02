@@ -18,7 +18,7 @@ This document provides instructions for using the SafeNet RESTful Authentication
 
 Before you can use the SafeNet Java Authentication API, you will need the following:
 
--   Java runtime environment (JRE) version 11 or higher installed on your system.
+-   Java runtime environment (JRE) version 11 installed on your system.
 -   Access to your SafeNet Trusted Access (STA) or SafeNet Authentication Service (SAS-PCE) tenant, to download your tenant key `Agent.bsidkey` ([guide](https://thalesdocs.com/sta/operator/settings/encryption_key/index.html)).
 -   Authentication node configured in the SafeNet management console ([guide](https://thalesdocs.com/sta/operator/settings/auth_nodes/index.html)).
 
