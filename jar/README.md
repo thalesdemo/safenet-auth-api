@@ -106,4 +106,4 @@ This command sets several environment variables that are used by the Java applic
 
 ## Conclusion
 
-In this guide, we have provided instructions for installing and running the SafeNet Authentication API using the JAR file. By following these steps, you can easily set up and deploy a RESTful authentication gateway that enables secure user authentication and authorization for applications that interact with the SafeNet authentication service.
+In this guide, we have provided instructions for installing and running the SafeNet Authentication API using the JAR file. By following these steps, you can easily set up and deploy a RESTful authentication gateway that enables secure user authentication for applications that interact with the SafeNet authentication service.
