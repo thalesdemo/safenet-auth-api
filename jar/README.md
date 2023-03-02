@@ -16,7 +16,7 @@ This document provides instructions for using the SafeNet RESTful Authentication
 
 ## Requirements
 
-Before you can use the SafeNet Java Authentication API, you will need the following:
+Before you can use the SafeNet RESTful Authentication Gateway, you will need the following:
 
 -   Java runtime environment (JRE) version 11 installed on your system.
 -   Access to your SafeNet Trusted Access (STA) or SafeNet Authentication Service (SAS-PCE) tenant, to download your tenant key `Agent.bsidkey` ([guide](https://thalesdocs.com/sta/operator/settings/encryption_key/index.html)).
@@ -26,7 +26,7 @@ Note: If you are a Windows user, you may need to download and install additional
 
 ## Instructions
 
-To use the SafeNet Authentication API directly from the JAR file, follow these steps:
+To use the SafeNet RESTful Authentication Gateway directly from the JAR file, follow these steps:
 
 ### Step 1: Download the Configuration File
 
@@ -106,4 +106,4 @@ This command sets several environment variables that are used by the Java applic
 
 ## Conclusion
 
-In this guide, we have provided instructions for installing and running the SafeNet Authentication API using the JAR file. By following these steps, you can easily set up and deploy a RESTful authentication gateway that enables secure user authentication for applications that interact with the SafeNet authentication service.
+In this guide, we have provided instructions for installing and running the SafeNet RESTful Authentication Gateway using the JAR file. By following these steps, you can easily set up and deploy a RESTful authentication gateway that enables secure user authentication for applications that interact with the SafeNet authentication service.
