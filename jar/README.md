@@ -48,9 +48,9 @@ To use the SafeNet Authentication API directly from the JAR file, follow these s
 
 3.  Modify the INI configuration file you downloaded in step 1 to update the following fields:
     
-    -   `EncryptionKeyFile`: The SafeNet Agent.bsidkey file retrieved from your virtual server. See the screenshot below for an example. ![Screenshot of EncryptionKeyFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/images/jar/screenshot1.png)
-    -   `PrimaryServer`: The hostname of the SafeNet TokenValidator server for your Cloud service zone (or your own hostname for the SAS-PCE edition). See the screenshot below for an example. ![Screenshot of PrimaryServer field](https://github.com/thalesdemo/safenet-auth-api/raw/main/images/jar/screenshot2.png)
-    -   `LogFile`: The file path for the SafeNet Java API logs. See the screenshot below for an example. ![Screenshot of LogFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/images/jar/screenshot3.png)
+    -   `EncryptionKeyFile`: The SafeNet Agent.bsidkey file retrieved from your virtual server. See the screenshot below for an example. ![Screenshot of EncryptionKeyFile field](hhttps://github.com/thalesdemo/safenet-auth-api/raw/main/image/jar/screenshot1.png)
+    -   `PrimaryServer`: The hostname of the SafeNet TokenValidator server for your Cloud service zone (or your own hostname for the SAS-PCE edition). See the screenshot below for an example. ![Screenshot of PrimaryServer field](https://github.com/thalesdemo/safenet-auth-api/raw/main/image/jar/screenshot2.png)
+    -   `LogFile`: The file path for the SafeNet Java API logs. See the screenshot below for an example. ![Screenshot of LogFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/image/jar/screenshot3.png)
 4.  If you are a Windows user, download the SafeNet Java Authentication API 1.3.0 installation package from the support portal, then install it to get the necessary Windows dependencies (such as CryptoCOM.dll).
     
 5.  Run the JAR file with the following command:
