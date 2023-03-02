@@ -1,4 +1,4 @@
-package com.safenet.auth.api;
+package com.thalesdemo.safenet.auth.api;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

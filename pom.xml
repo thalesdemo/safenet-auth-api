@@ -8,11 +8,18 @@
 		<version>2.7.9</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.safenet</groupId>
-	<artifactId>auth.api</artifactId>
-	<version>0.0.1</version>
-	<name>auth.api</name>
-	<description>SafeNet RESTful Authentication Gateway (with Spring 2 &amp; Java 11)</description>
+	<groupId>com.thalesdemo</groupId>
+	<artifactId>safenet-auth-api</artifactId>
+	<version>0.0.2</version>
+	<name>SafeNet RESTful Authentication Gateway</name>
+	<description>An API for authenticating users using SafeNet tokens</description>
+	<developers>
+		<developer>
+			<id>cina</id>
+			<name>Cina Shaykhian</name>
+			<email>hello@onewelco.me</email>
+		</developer>
+	</developers>
 	<properties>
 		<java.version>11</java.version>
 		<spring-security.version>5.6.10</spring-security.version>

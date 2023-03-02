@@ -18,7 +18,7 @@
  * @author Cina Shaykhian
  * @contact hello@onewelco.me
  */
-package com.safenet.auth.api;
+package com.thalesdemo.safenet.auth.api;
 
 import CRYPTOCard.API.*;
 import java.awt.image.BufferedImage;

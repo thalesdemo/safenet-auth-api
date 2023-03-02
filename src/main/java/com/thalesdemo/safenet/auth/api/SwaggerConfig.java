@@ -23,7 +23,7 @@
  * @author Cina Shaykhian
  * @contact hello@onewelco.me
  */
-package com.safenet.auth.api;
+package com.thalesdemo.safenet.auth.api;
 
 import java.util.Arrays;
 
@@ -66,7 +66,7 @@ public class SwaggerConfig {
     		  .addServersItem(serverInfo())
               .info(new Info().title("SafeNet RESTful Authentication Gateway")
               .description("This is a demo project to authenticate users against the SafeNet authentication platform using REST API endpoints.")
-              .version("v0.0.1")
+              .version("v0.0.2")
               .contact(new Contact().email("hello@onewelco.me"))
               .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0.html")))
               .externalDocs(new ExternalDocumentation()

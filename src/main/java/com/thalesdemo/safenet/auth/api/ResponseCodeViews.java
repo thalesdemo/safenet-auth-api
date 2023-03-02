@@ -24,13 +24,13 @@
  * JSON serialization in conjunction with the ResponseCode class.
  
  * @hidden
- * @see com.safenet.auth.api.responses.ResponseCode
+ * @see com.thalesdemo.safenet.auth.api.responses.ResponseCode
  * @see com.fasterxml.jackson.annotation.JsonView
  *
  * @author Cina Shaykhian
  * @contact hello@onewelco.me
  */
-package com.safenet.auth.api;
+package com.thalesdemo.safenet.auth.api;
 
 import io.swagger.v3.oas.annotations.Hidden;
 

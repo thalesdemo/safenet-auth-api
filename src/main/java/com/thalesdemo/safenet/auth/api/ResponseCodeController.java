@@ -25,7 +25,7 @@
  * @author Cina Shaykhian
  * @contact hello@onewelco.me
  */
-package com.safenet.auth.api;
+package com.thalesdemo.safenet.auth.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

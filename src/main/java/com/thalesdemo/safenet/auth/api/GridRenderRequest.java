@@ -21,7 +21,7 @@
  * @schema(description = "The request body for the render grid endpoint")
  */
  
-package com.safenet.auth.api;
+package com.thalesdemo.safenet.auth.api;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
