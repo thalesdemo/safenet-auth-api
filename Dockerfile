@@ -20,7 +20,7 @@ RUN mkdir -p /app/tools
 
 # Set the working directory and copy your application files
 WORKDIR /app
-COPY target/safenet-auth-api-0.0.2.jar ./safenet-auth-api.jar
+COPY jar/safenet-auth-api-0.0.2.jar ./safenet-auth-api.jar
 COPY config/linux.ini ./config/config.ini
 COPY tools/keygen-1.0.jar ./tools/keygen.jar
 COPY begin.sh .
