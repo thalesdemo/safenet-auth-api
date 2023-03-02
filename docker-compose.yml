@@ -2,7 +2,7 @@ version: '3'
 
 services:
   safenet-auth-api:
-    image: thalesdemo/safenet-auth-api-dev:0.0.2-arm64
+    image: thalesdemo/safenet-auth-api
     container_name: safenet-auth-api
     environment:
       HOST_AGENT_KEY_PATH: ${HOST_AGENT_KEY_PATH}

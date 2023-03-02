@@ -20,18 +20,17 @@ RUN mkdir -p /app/tools
 
 # Set the working directory and copy your application files
 WORKDIR /app
-COPY jar/auth.api-0.0.1.jar ./microservice.jar
-COPY config/config.ini ./config/config.ini
+COPY target/safenet-auth-api-0.0.2.jar ./safenet-auth-api.jar
+COPY config/linux.ini ./config/config.ini
 COPY tools/keygen-1.0.jar ./tools/keygen.jar
-COPY tools/start.sh .
-RUN chown appuser:appuser /app/start.sh && \
-    chmod 700 /app/start.sh
-RUN chmod 700 /app/secret && \
+COPY begin.sh .
+RUN chmod 700 /app/begin.sh && \
+    chmod 700 /app/secret && \
     chmod 700 /app/tools && \
-    chmod 700 /app/config && \
-    chmod 600 /app/tools/keygen.jar && \
+    chmod 700 /app/config 
+RUN chmod 600 /app/tools/keygen.jar && \
     chmod 600 /app/config/config.ini && \
-    chmod 600 /app/microservice.jar
+    chmod 600 /app/safenet-auth-api.jar
 
 # Create the custom log directory and change ownership and permissions
 RUN mkdir -p /var/log/microservice && \
@@ -47,5 +46,5 @@ USER appuser
 
 # Set the entrypoint
 
-ENTRYPOINT [ "/app/start.sh" ]
-CMD ["java", "-jar", "/app/microservice.jar"]
+ENTRYPOINT [ "/app/begin.sh" ]
+CMD ["java", "-jar", "/app/safenet-auth-api.jar"]
