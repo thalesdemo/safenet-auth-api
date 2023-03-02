@@ -27,6 +27,9 @@
  */
 package com.safenet.auth.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -77,6 +80,7 @@ public class AuthenticationResponse {
     public AuthenticationResponse(String username) {
         this.username = username;
         this.challenge = new AuthenticationChallenge();
+        this.setResponse(ResponseCode.AUTH_FAILURE); // default deny logic
     }
 
     
@@ -106,13 +110,38 @@ public class AuthenticationResponse {
         this.setChallenge(challenge);
     }
 
+    
+    /**
+     * Constructs a new AuthenticationResponse object with the provided parameters.
+     *
+     * @param username the username associated with this authentication response
+     * @param status the status code of this authentication response
+     * @param response the ResponseCode object associated with this authentication response
+     * @param challenge the AuthenticationChallenge object associated with this authentication response
+     */
+    
+    @JsonCreator
+    public AuthenticationResponse(
+            @JsonProperty("username") String username,
+            @JsonProperty("status") int status,
+            @JsonProperty("response") ResponseCode response,
+            @JsonProperty("challenge") AuthenticationChallenge challenge) {
+        // Call the constructor that only takes a username parameter
+        this(username);
+        // Set the status of this authentication response to the provided status
+        this.setStatus(status);
+        // Set the challenge of this authentication response to the provided challenge
+        this.setChallenge(challenge);
+    }
+
 	
     /**
      * Indicates whether the authentication was successful.
      *
      * @return true if the authentication was successful, false otherwise
      */
-    
+
+    @JsonProperty(access = Access.READ_ONLY)
     @Schema(description="When set to true, the authentication is successful.")
     public Boolean isAuthenticated() {
         return this.getStatus() == ResponseCode.AUTH_SUCCESS.getCode();
@@ -124,7 +153,8 @@ public class AuthenticationResponse {
      *
      * @return true if the authentication was denied, false otherwise
      */
-    
+
+    @JsonProperty(access = Access.READ_ONLY)
     @Schema(description="When set to true, the authentication is denied.")
     public Boolean isDenied() {
         return this.getStatus() == ResponseCode.AUTH_FAILURE.getCode() 
@@ -138,7 +168,8 @@ public class AuthenticationResponse {
      *
      * @return true if the authentication was challenged, false otherwise
      */
-    
+
+    @JsonProperty(access = Access.READ_ONLY)
     @Schema(description="When set to true, the authentication is challenged.")
     public Boolean isChallenged() {
         return this.getStatus() == ResponseCode.AUTH_CHALLENGE.getCode()
@@ -180,16 +211,24 @@ public class AuthenticationResponse {
 
 	
 	/**
-	 * Set the status of the authentication response using a ResponseCode object.
-	 * 
-	 * @param response the ResponseCode to set based on the ResponseCode object
+	 * Sets the status of this authentication response based on the provided ResponseCode object.
+	 *
+	 * @param response the ResponseCode object to use for setting the status
 	 * @return this AuthenticationResponse object
 	 */
 	
 	public AuthenticationResponse setStatus(ResponseCode response) {
-		this.status = response.getCode();
-		this.setResponse(response);
-		return this;
+	    // If the ResponseCode is null, set the status to AUTH_FAILURE
+	    if (response == null) {
+	        this.status = ResponseCode.AUTH_FAILURE.getCode();
+	    } else {
+	        // Otherwise, set the status to the code of the provided ResponseCode object
+	        this.status = response.getCode();
+	        // Also set the response object to the provided ResponseCode object
+	        this.setResponse(response);	
+	    }
+	    // Return this AuthenticationResponse object for method chaining
+	    return this;
 	}
 
 	

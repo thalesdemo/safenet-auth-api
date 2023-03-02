@@ -25,6 +25,7 @@
 package com.safenet.auth.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -74,11 +75,47 @@ public class AuthenticationRequest {
 	 * @param username The username associated with the authentication request.
 	 */
 	
-	@JsonCreator
 	public AuthenticationRequest(String username) {
 		this.username = username;
+		this.code = "";
+		this.state = "";
 	}
 
+	
+	/**
+	 * Constructs an AuthenticationRequest object with the specified username and code.
+	 *
+	 * @param username the username associated with this authentication request
+	 * @param code the code associated with this authentication request, or an empty string if null
+	 */
+	
+	public AuthenticationRequest(String username, String code) {
+	    // Call the constructor that only takes a username parameter
+	    this(username);
+	    // Set the code of this authentication request to the provided code, or an empty string if null
+	    this.code = code == null ? "" : code;
+	}
+
+	
+   /**
+	 * Constructs a new AuthenticationRequest object with the provided parameters.
+	 *
+	 * @param username the username associated with this authentication request
+	 * @param code the code associated with this authentication request
+	 * @param state the state associated with this authentication request, if any
+	 */
+	
+	@JsonCreator
+	public AuthenticationRequest(
+	        @JsonProperty("username") String username,
+	        @JsonProperty("code") String code,
+	        @JsonProperty("state") String state) {
+	    // Call the constructor that only takes a username and code parameters
+	    this(username, code);
+	    // Set the state of this authentication request to the provided state, or an empty string if null
+	    this.state = state == null ? "" : state;
+	}
+	
 	
 	/**
 	 * Get the passcode associated with this authentication request.

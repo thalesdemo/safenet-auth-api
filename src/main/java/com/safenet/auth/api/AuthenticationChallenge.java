@@ -23,7 +23,10 @@
  */
 package com.safenet.auth.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -60,7 +63,7 @@ public class AuthenticationChallenge {
 	 */
 	
 	public AuthenticationChallenge() {
-		
+		this.state = this.challengeData = this.challengeName = "";
 	}
     
     /**
@@ -71,7 +74,11 @@ public class AuthenticationChallenge {
      * @param state the current state of the challenge
      */
     
-	public AuthenticationChallenge(String name, String data, String state) {
+	@JsonCreator
+	public AuthenticationChallenge(
+			@JsonProperty("name") String name, 
+			@JsonProperty("data") String data, 
+			@JsonProperty("state") String state) {
     	this.setChallengeName(name)
     		.setChallengeData(data)
     		.setState(state);
@@ -98,6 +105,7 @@ public class AuthenticationChallenge {
      * @return The updated AuthenticationChallenge object.
      */
     
+    @JsonSetter("challenge")
     public AuthenticationChallenge setChallengeData(String challengeData) {
         this.challengeData = challengeData;
         return this;
@@ -117,15 +125,16 @@ public class AuthenticationChallenge {
 
     
     /**
-     * Set the challenge state.
+     * Sets the state of this authentication challenge.
      *
-     * @param state The challenge state.
-     *
-     * @return The updated AuthenticationChallenge object.
+     * @param state the state to set for this authentication challenge
+     * @return the updated AuthenticationChallenge object
      */
-    
+    @JsonSetter("state")
     public AuthenticationChallenge setState(String state) {
-        this.state = state;
+        // Set the state of this authentication challenge to the provided state, or an empty string if null
+        this.state = state == null ? "" : state;
+        // Return the updated AuthenticationChallenge object for method chaining
         return this;
     }
 
@@ -150,6 +159,7 @@ public class AuthenticationChallenge {
      * @return The updated AuthenticationChallenge object.
      */
     
+    @JsonSetter("name")
     public AuthenticationChallenge setChallengeName(String challengeName) {
         this.challengeName = challengeName;
         return this;

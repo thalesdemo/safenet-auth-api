@@ -30,6 +30,7 @@
 package com.safenet.auth.api;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -151,7 +152,8 @@ public class ResponseCode {
      * @param message The message associated with the response code.
      */
     
-    public ResponseCode(int code, String name, String message) {
+    @JsonCreator
+    public ResponseCode(@JsonProperty("code") int code, @JsonProperty("name") String name, @JsonProperty("message") String message) {
         this.code = code;
         this.name = name;
         this.message = message;
