@@ -1,12 +1,12 @@
 ## Table of Contents
--   [Introduction](https://github.com/thalesdemo/safenet-auth-api/main/jar#introduction)
--   [Requirements](https://github.com/thalesdemo/safenet-auth-api/main/jar#requirements)
--   [Instructions](https://github.com/thalesdemo/safenet-auth-api/main/jar#instructions)
-    -   [Download Configuration File](https://github.com/thalesdemo/safenet-auth-api/main/jar#step-1-download-the-configuration-file)
-    -   [Generate API Key](https://github.com/thalesdemo/safenet-auth-api/main/jar#step-2-generate-api-key)
-    -   [Modify Configuration File](https://github.com/thalesdemo/safenet-auth-api/main/jar#step-3-modify-the-ini-configuration-file)
-    -   [Install Dependencies (Windows Only)](https://github.com/thalesdemo/safenet-auth-api/main/jar#step-4-install-dependencies-windows-only)
-    -   [Run JAR File](https://github.com/thalesdemo/safenet-auth-api/main/jar#step-5-run-the-jar-file)
+-   [Introduction](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#introduction)
+-   [Requirements](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#requirements)
+-   [Instructions](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#instructions)
+    -   [Download Configuration File](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#step-1-download-the-configuration-file)
+    -   [Generate API Key](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#step-2-generate-api-key)
+    -   [Modify Configuration File](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#step-3-modify-the-ini-configuration-file)
+    -   [Install Dependencies (Windows Only)](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#step-4-install-dependencies-windows-only)
+    -   [Run JAR File](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#step-5-run-the-jar-file)
 
 ## Introduction
 
