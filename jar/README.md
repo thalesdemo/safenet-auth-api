@@ -1,4 +1,4 @@
-# SafeNet Authentication API JAR Installation Guide
+# SafeNet RESTful Authentication Gateway JAR Installation Guide
 ## Table of Contents
 -   [Introduction](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#introduction)
 -   [Requirements](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar#requirements)
