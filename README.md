@@ -2,7 +2,7 @@
 
 🚀 Get Started with Our SafeNet RESTful Authentication Gateway on [Docker Hub](https://hub.docker.com/r/thalesdemo/safenet-auth-api)!
 
-👉 Alternately, you can deploy this project directly using our JAR file! Check out the [jar](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar) folder in our repository for step-by-step instructions. 
+👉 Alternately, deploy this project directly using our JAR file! Check out the [jar](https://github.com/thalesdemo/safenet-auth-api/tree/main/jar) folder in our repository for step-by-step instructions. 
 
 <h2>Important Notice</h2>
 
