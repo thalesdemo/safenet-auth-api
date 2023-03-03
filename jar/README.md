@@ -72,17 +72,17 @@ Modify the INI configuration file you downloaded in step 1 to update the followi
     
 -   `EncryptionKeyFile`: The SafeNet Agent.bsidkey file retrieved from your virtual server. See the screenshot below for an example. 
 
-![Screenshot of EncryptionKeyFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/image/jar/screenshot1.png)
+![Screenshot of EncryptionKeyFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/art/jar/screenshot1.png)
         
         
 -   `PrimaryServer`: The hostname of the SafeNet TokenValidator server for your Cloud service zone (or your own hostname for the SAS-PCE edition). See the screenshot below for an example. 
 
-![Screenshot of PrimaryServer field](https://github.com/thalesdemo/safenet-auth-api/raw/main/image/jar/screenshot2.png)
+![Screenshot of PrimaryServer field](https://github.com/thalesdemo/safenet-auth-api/raw/main/art/jar/screenshot2.png)
         
         
 -   `LogFile`: The file path for the SafeNet Java API logs. See the screenshot below for an example. 
 
-![Screenshot of LogFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/image/jar/screenshot3.png)
+![Screenshot of LogFile field](https://github.com/thalesdemo/safenet-auth-api/raw/main/art/jar/screenshot3.png)
         
         
 ### Step 4: Install Dependencies (Windows Only)
@@ -100,7 +100,7 @@ This command sets several environment variables that are used by the Java applic
 -   `API_LOG_LEVEL`: The logging level for the Java application (set to INFO in this example).
 -   `API_SERVER_PORT`: The port number for the Java application server (set to 8888 in this example).
 -   `JCRYPTO_INI_PATH`: The file path for the modified INI configuration file (set to `./linux.ini` in this example).
--   `API_KEY_HASH`: The hashed API key value for the SafeNet authentication service (set to `$2a$10$eOSUL4ULDPPd/qXFxMmnOeFlRLgua5XWJQ8INmlnKk7A0JNemDKoi` in this example).
+-   `API_KEY_HASH`: The hashed API key value for the SafeNet RESTful Authentication Gateway service (set to `$2a$10$eOSUL4ULDPPd/qXFxMmnOeFlRLgua5XWJQ8INmlnKk7A0JNemDKoi` in this example).
 -   `safenet-auth-api-0.0.2.jar`: The filename of the JAR file to run.
 
 
