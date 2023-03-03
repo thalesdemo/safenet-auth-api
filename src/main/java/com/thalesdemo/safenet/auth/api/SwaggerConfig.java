@@ -27,6 +27,8 @@ package com.thalesdemo.safenet.auth.api;
 
 import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -44,6 +46,14 @@ import io.swagger.v3.oas.models.tags.Tag;
 @Configuration
 public class SwaggerConfig {
 	 
+    /**
+     * Injects the {@link BuildProperties} dependency.
+     */
+	
+    @Autowired
+    private BuildProperties buildProperties;
+	
+    
 	/**
      * Configures and returns the OpenAPI instance for the Spring application using the Springdoc OpenAPI library.
 	 * @return the OpenAPI instance
@@ -64,14 +74,14 @@ public class SwaggerConfig {
     		  .tags(Arrays.asList(new Tag().name("Authentication").description("APIs for user authentication"),
     				  			  new Tag().name("Grid Image").description("APIs for authentication challenges related to GrIDsure tokens")))
     		  .addServersItem(serverInfo())
-              .info(new Info().title("SafeNet RESTful Authentication Gateway")
-              .description("This is a demo project to authenticate users against the SafeNet authentication platform using REST API endpoints.")
-              .version("v0.0.2")
-              .contact(new Contact().email("hello@onewelco.me"))
+              .info(new Info().title(buildProperties.getName())
+              .description(buildProperties.get("project.description"))
+              .version(buildProperties.getVersion())
+              .contact(new Contact().email(buildProperties.get("contact.email")))
               .license(new License().name("Apache 2.0").url("https://www.apache.org/licenses/LICENSE-2.0.html")))
               .externalDocs(new ExternalDocumentation()
-              .description("SafeNet Authentication API Documentation (Git)")
-              .url("https://github.com/thalesdemo/safenet-auth-api"));
+              .description(buildProperties.get("contact.git.name"))
+              .url(buildProperties.get("contact.git.url")));
 	}
 	
 	
