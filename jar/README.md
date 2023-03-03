@@ -93,7 +93,7 @@ If you are a Windows user, download the [SafeNet Java Authentication API 1.3.0 i
 
 Run the JAR file with the following command:
     
-    java -jar -DAPI_LOG_LEVEL=INFO -DAPI_SERVER_PORT=8888 -DJCRYPTO_INI_PATH=./linux.ini -DAPI_KEY_HASH='$2a$10$eOSUL4ULDPPd/qXFxMmnOeFlRLgua5XWJQ8INmlnKk7A0JNemDKoi' safenet-auth-api-0.0.2.jar
+    java -jar -DAPI_LOG_LEVEL=INFO -DAPI_SERVER_PORT=8888 -DJCRYPTO_INI_PATH=./linux.ini -DAPI_KEY_HASH='$2a$10$eOSUL4ULDPPd/qXFxMmnOeFlRLgua5XWJQ8INmlnKk7A0JNemDKoi' safenet-auth-api-0.0.3.jar
 
 
 This command sets several environment variables that are used by the Java application:
