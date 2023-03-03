@@ -101,7 +101,7 @@ This command sets several environment variables that are used by the Java applic
 -   `API_SERVER_PORT`: The port number for the Java application server (set to 8888 in this example).
 -   `JCRYPTO_INI_PATH`: The file path for the modified INI configuration file (set to `./linux.ini` in this example).
 -   `API_KEY_HASH`: The hashed API key value for the SafeNet RESTful Authentication Gateway service (set to `$2a$10$eOSUL4ULDPPd/qXFxMmnOeFlRLgua5XWJQ8INmlnKk7A0JNemDKoi` in this example).
--   `safenet-auth-api-0.0.2.jar`: The filename of the JAR file to run.
+-   `safenet-auth-api-0.0.3.jar`: The filename of the JAR file to run.
 
 
 ## Conclusion
