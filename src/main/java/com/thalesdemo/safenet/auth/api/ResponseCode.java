@@ -37,77 +37,77 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(title = "ResponseCode", description = "The server response codes based on the SafeNet authentication service.")
 public class ResponseCode {
-
-	 /**
-     * Indicates that authentication failed.
-     */
 	
-    @Schema(description = "Response code for authentication failure.")
-    public static final ResponseCode AUTH_FAILURE = new ResponseCode(0, "AUTH_FAILURE", "Authentication failed. Please check your credentials and try again.");
+	/**
+	 * Indicates that authentication failed.
+	 */
+	
+	@Schema(description = "Response code for authentication failure. Returned result: 0 - Authentication Failed")
+	public static final ResponseCode AUTH_FAILURE = new ResponseCode(0, "AUTH_FAILURE", "Authentication failed. Please check your credentials and try again.");
 
-    
-    /**
-     * Indicates that authentication was successful.
-     */
-    
-    @Schema(description = "Response code for authentication success.")
-    public static final ResponseCode AUTH_SUCCESS = new ResponseCode(1, "AUTH_SUCCESS", "Authentication successful.");
+	
+	/**
+	 * Indicates that authentication was successful.
+	 */
+	
+	@Schema(description = "Response code for authentication success. Returned result: 1 - Authentication Succeeded")
+	public static final ResponseCode AUTH_SUCCESS = new ResponseCode(1, "AUTH_SUCCESS", "Authentication successful.");
 
-    
-    /**
-     * Indicates that a challenge was issued during authentication.
-     */
-    
-    @Schema(description = "Response code for authentication challenge.")
-    public static final ResponseCode AUTH_CHALLENGE = new ResponseCode(2, "AUTH_CHALLENGE", "A challenge has been issued during authentication. Please follow the instructions to complete the authentication process.");
+	
+	/**
+	 * Indicates that a challenge was issued during authentication.
+	 */
+	
+	@Schema(description = "Response code for authentication challenge. Returned result: 2 - Challenge")
+	public static final ResponseCode AUTH_CHALLENGE = new ResponseCode(2, "AUTH_CHALLENGE", "A challenge has been issued during authentication. Please follow the instructions to complete the authentication process.");
 
-    
-    /**
-     * Indicates that the server PIN was provided.
-     */
-    
-    @Schema(description = "Response code for server PIN provided.")
-    public static final ResponseCode SERVER_PIN_PROVIDED = new ResponseCode(3, "SERVER_PIN_PROVIDED", "Server PIN has been provided.");
+	
+	/**
+	 * Indicates that the server PIN was provided.
+	 */
+	
+	@Schema(description = "Response code for server PIN provided. Returned result: 3 - Server provided PIN")
+	public static final ResponseCode SERVER_PIN_PROVIDED = new ResponseCode(3, "SERVER_PIN_PROVIDED", "Server PIN has been provided.");
 
-    
-    /**
-     * Indicates that the user's PIN needs to be changed.
-     */
-    
-    @Schema(description = "Response code for user PIN change.")
-    public static final ResponseCode USER_PIN_CHANGE = new ResponseCode(4, "USER_PIN_CHANGE", "Your PIN needs to be changed.");
-    
-    
-    /**
-     * Indicates that outer window authentication is required.
-     */
-    
-    @Schema(description = "Response code for outer window authentication.")
-    public static final ResponseCode OUTER_WINDOW_AUTH = new ResponseCode(5, "OUTER_WINDOW_AUTH", "Outer window authentication is required to complete the process.");
+	
+	/**
+	 * Indicates that the user's PIN needs to be changed.
+	 */
+	
+	@Schema(description = "Response code for user PIN change. Returned result: 4 - User needs to provide PIN")
+	public static final ResponseCode USER_PIN_CHANGE = new ResponseCode(4, "USER_PIN_CHANGE", "Your PIN needs to be changed.");
 
-    
-    /**
-     * Indicates that the static password needs to be changed.
-     */
-    
-    @Schema(description = "Response code for changing the static password.")
-    public static final ResponseCode CHANGE_STATIC_PASSWORD = new ResponseCode(6, "CHANGE_STATIC_PASSWORD", "Your static password needs to be updated.");
-   
-    
-    /**
-     * Indicates that the static password change has failed.
-     */
-    
-    @Schema(description = "Response code for static change failed.")
-    public static final ResponseCode STATIC_CHANGE_FAILED = new ResponseCode(7, "STATIC_CHANGE_FAILED", "Failed to change the static password. Please try again later.");
+	
+	/**
+	 * Indicates that outer window authentication is required.
+	 */
+	
+	@Schema(description = "Response code for outer window authentication. Returned result: 5 - Authentication in outer window. Re-authenticate.")
+	public static final ResponseCode OUTER_WINDOW_AUTH = new ResponseCode(5, "OUTER_WINDOW_AUTH", "Outer window authentication is required to complete the process.");
 
-    
-    /**
-     * Indicates that the PIN change has failed.
-     */
-    
-    @Schema(description = "Response code for PIN change failed.")
-    public static final ResponseCode PIN_CHANGE_FAILED = new ResponseCode(8, "PIN_CHANGE_FAILED", "Failed to change the PIN. Please try again later.");
+	
+	/**
+	 * Indicates that the static password needs to be changed.
+	 */
+	
+	@Schema(description = "Response code for changing the static password. Returned result: 6 - User must change their static password.")
+	public static final ResponseCode CHANGE_STATIC_PASSWORD = new ResponseCode(6, "CHANGE_STATIC_PASSWORD", "Your static password needs to be updated.");
+
+	
+	/**
+	 * Indicates that the static password change does not meet policy requirements.
+	 */
+	
+	@Schema(description = "Response code for static password change policy violation. Returned result: 7 - Static password change does not satisfy policies.")
+	public static final ResponseCode STATIC_CHANGE_FAILED = new ResponseCode(7, "STATIC_CHANGE_FAILED", "The new static password does not meet policy requirements. Please choose a stronger password and try again.");
+
+	
+	/**
+	 * Indicates that the provided PIN does not meet policy requirements.
+	 */
+	
+	@Schema(description = "Response code for PIN policy violation. Returned result: 8 - PIN provided doesn’t meet requirements.")
+	public static final ResponseCode PIN_CHANGE_FAILED = new ResponseCode(8, "PIN_CHANGE_FAILED", "The provided PIN does not meet policy requirements. Please choose a stronger PIN and try again.");
 
     
     /**
