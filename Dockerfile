@@ -48,7 +48,7 @@ RUN echo "Project version is: ${APP_VERSION}"
 COPY jar/safenet-auth-api-${APP_VERSION}.jar ./safenet-auth-api.jar
 COPY config/linux.ini ./config/config.ini
 COPY tools/keygen-1.0.jar ./tools/keygen.jar
-COPY begin.sh .
+COPY tools/begin.sh .
 RUN chmod 700 /app/begin.sh && \
     chmod 700 /app/secret && \
     chmod 700 /app/tools && \
