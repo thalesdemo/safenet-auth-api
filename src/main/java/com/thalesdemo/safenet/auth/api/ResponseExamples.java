@@ -150,4 +150,17 @@ public class ResponseExamples {
 				+ "  }\r\n"
 				+ "]";
 	}
+	
+	public static class Health {
+		
+		public static final String OK = "{\r\n"
+				+ "  \"health\": \"ok\",\r\n"
+				+ "  \"token_validator\": true\r\n"
+				+ "}";
+		
+		public static final String ERROR = "{\r\n"
+				+ "  \"health\": \"error\",\r\n"
+				+ "  \"token_validator\": false\r\n"
+				+ "}";
+	}
 }

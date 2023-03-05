@@ -22,6 +22,8 @@ package com.thalesdemo.safenet.auth.api;
 
 import CRYPTOCard.API.*;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -344,5 +346,43 @@ public class Authenticate{
   	  										 Optional.ofNullable(authenticationRequest.getOrganization())
   	  										);
 	}
+	
+	
+	/**
+	 * Returns a boolean value indicating whether the server is up or down.
+	 *
+	 * This method calls the checkServerStatus() method on the object api with an array arrData as a parameter.
+	 * The checkServerStatus() method is assumed to update the arrData array with status information.
+	 * If checkServerStatus() throws an exception, the method logs an error message at the SEVERE level
+	 * and returns false to indicate that the server status is in an error state.
+	 *
+	 * If checkServerStatus() completes successfully, the method uses the Objects.equals() method to check if the
+	 * value at index 8 of the arrData array is equal to the string "0" (in accordance to CRYPTOCardAPI's manual).
+	 * If it is, the method returns true to indicate that the server is up. Otherwise, it returns false to
+	 * indicate that the server is down.
+	 *
+	 * @return A boolean value indicating whether the server is up or down.
+	 */
+	
+	public boolean getServerStatus() {
+	    String[] arrData = new String[11];
+	    try {
+	        this.api.checkServerStatus(arrData);
+	    }
+	    catch(Exception e) {
+	        // Log an error message at the SEVERE level if checkServerStatus() throws an exception
+	        Log.log(Level.SEVERE, "Failed to check server status: " + e.getMessage());
+	        Log.severe("Trace: " + Arrays.toString(arrData));
+	        return false;
+	    }
+	    // Use Objects.equals() to check if the value at index 8 of the arrData array is "1"
+	    boolean serverReady = Objects.equals(arrData[8], "0");
+	    
+	    if(!serverReady) 
+	    	Log.warning("Error during getServerStatus(): " + Arrays.toString(arrData));
+	    
+	    return serverReady;
+	}
+
 	
 }

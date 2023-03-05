@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-
+ *
  * This REST controller provides endpoints for generating and retrieving GrIDsure grid images that can be used
  * to authenticate users. The controller also provides a GET endpoint that generates a new grid image for a specified
  * username and returns the image data as a PNG byte array, eliminating the need of handling the grid challenge string

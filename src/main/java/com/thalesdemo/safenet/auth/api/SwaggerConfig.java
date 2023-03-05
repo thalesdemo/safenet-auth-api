@@ -72,7 +72,10 @@ public class SwaggerConfig {
     		  .security(Arrays.asList(
                         new SecurityRequirement().addList("X-API-Key")))
     		  .tags(Arrays.asList(new Tag().name("Authentication").description("APIs for user authentication"),
-    				  			  new Tag().name("Grid Image").description("APIs for authentication challenges related to GrIDsure tokens")))
+    				  			  new Tag().name("Grid Image").description("APIs for authentication challenges related to GrIDsure tokens"),
+    				  			  new Tag().name("Health").description("API for health check of the application")
+    				  			  
+    				))
     		  .addServersItem(serverInfo())
               .info(new Info().title(buildProperties.getName())
               .description(buildProperties.get("project.description"))
