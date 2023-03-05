@@ -375,7 +375,7 @@ public class Authenticate{
 	        Log.severe("Trace: " + Arrays.toString(arrData));
 	        return false;
 	    }
-	    // Use Objects.equals() to check if the value at index 8 of the arrData array is "1"
+	    // Use Objects.equals() to check if the value at index 8 of the arrData array is "0"
 	    boolean serverReady = Objects.equals(arrData[8], "0");
 	    
 	    if(!serverReady) 

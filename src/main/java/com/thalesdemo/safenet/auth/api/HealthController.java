@@ -69,7 +69,11 @@ public class HealthController {
 
 	
 	/**
-	 * An instance of the Authenticate class for use in this controller.
+	 * A reference to the Authenticate bean, which provides methods for authenticating API requests and checking the status
+	 * of the SafeNet authentication service.
+	 * 
+	 * This field is autowired by Spring for use in this controller. The Authenticate bean is used by the endpoints in this
+	 * controller to retrieve the status of the service
 	 */
 	
 	@Autowired
