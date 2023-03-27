@@ -10,7 +10,7 @@ Thank you for your interest in our demo project! It is important to note that th
 
 <h2>Summary</h2>
 
-This microservice is a REST-based solution that allows for secure and efficient authentication against SafeNet authentication servers. It provides simple and easy-to-use endpoints that handle user authentication and credential validation. With advanced security features such as GRID or OTP authentication,  the SafeNet RESTful Authentication Gateway ensures secure and auditable authentication transactions, making it an ideal solution for any application or service that requires secure user authentication.
+This microservice is a REST-based solution that allows for secure and efficient authentication against SafeNet authentication servers. It provides simple and easy-to-use endpoints that handle user authentication and credential validation. With advanced security features such as GRID or Push OTP authentication,  the SafeNet RESTful Authentication Gateway ensures secure and auditable authentication transactions, making it an ideal solution for any application or service that requires secure user authentication.
 
 <h2>Deployment Guidelines</h2>
 
@@ -18,7 +18,7 @@ To execute the Docker image successfully, it is essential to create a dotenv fil
 
 In order to operate this image, it is imperative to have your `Agent.bsidkey` SafeNet encryption key readily available.
 
-Please keep in mind that the authentication agent underlying this image depends on the `SafeNet TokenValidator endpoints`. To ensure uninterrupted functionality, it is important to whitelist your public-facing IP address(es) in the `Auth Nodes` section of the SafeNet management console.
+Please keep in mind that the authentication agent underlying this image depends on the `SafeNet TokenValidator endpoints`. To ensure uninterrupted functionality, it is important to whitelist your public-facing IP address(es) in the `Auth Nodes` section of the SafeNet management console. You may alternately supply to `orgCode` query parameter directly in the JCRYPTO_INI file to eliminate the aforementioned whitelisting requirement. In the current Docker release, the INI file must be manually modified within the running container (under /app/config/config.ini) to include this `orgCode` query parameter. 
 
 <h2>Configuration Files</h2>
 
@@ -26,6 +26,7 @@ Please keep in mind that the authentication agent underlying this image depends 
 ```text
 SAFENET_SERVER_HOST=cloud.us.safenetid.com
 HOST_AGENT_KEY_PATH=/host/path/to/your/tenant/Agent.bsidkey
+RESOURCE_NAME=SafeNet Gateway Demo
 API_SERVER_PORT=8888
 API_LOG_LEVEL=INFO
 ```
@@ -45,6 +46,7 @@ services:
       API_SERVER_PORT: ${API_SERVER_PORT}
       API_LOG_LEVEL: ${API_LOG_LEVEL}
       API_KEY_HASH: ${API_KEY_HASH-}
+      RESOURCE_NAME: ${RESOURCE_NAME-}
       JCRYPTO_INI_PATH: /app/config/config.ini
     volumes:
       - type: bind

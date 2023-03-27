@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This REST controller provides endpoints for generating and retrieving GrIDsure grid images that can be used
- * to authenticate users. The controller also provides a GET endpoint that generates a new grid image for a specified
- * username and returns the image data as a PNG byte array, eliminating the need of handling the grid challenge string
- * in the client application, i.e., the challenge-request is made automatically while retrieving the image, thus 
- * logging a challenge event in the SafeNet authentication servers.
+ * This REST controller provides endpoints for generating and retrieving 
+ * GrIDsure grid images that can be used to authenticate users. The controller 
+ * also provides a GET endpoint that generates a new grid image for a specified
+ * username and returns the image data as a PNG byte array, eliminating the 
+ * need of handling the grid challenge string in the client application, 
+ * i.e., the challenge-request is made automatically while retrieving the 
+ * image, thus logging a challenge event in the SafeNet authentication servers.
  *
  * @author Cina Shaykhian
  * @contact hello@onewelco.me

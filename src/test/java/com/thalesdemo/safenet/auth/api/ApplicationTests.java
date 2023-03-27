@@ -9,6 +9,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {"API_SERVER_PORT=9999"})
 @TestPropertySource(properties = {"API_KEY_HASH=1234"})
 @TestPropertySource(properties = {"API_LOG_LEVEL=DEBUG"})
+@TestPropertySource(properties = {"HOST_AGENT_KEY_PATH=C:\\agent.key"})
 
 @SpringBootTest
 class ApplicationTests {

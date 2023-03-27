@@ -10,6 +10,7 @@ services:
       API_SERVER_PORT: ${API_SERVER_PORT}
       API_LOG_LEVEL: ${API_LOG_LEVEL-INFO}
       API_KEY_HASH: ${API_KEY_HASH-}
+      RESOURCE_NAME: ${RESOURCE_NAME-}
       JCRYPTO_INI_PATH: /app/config/config.ini
     volumes:
       - type: bind

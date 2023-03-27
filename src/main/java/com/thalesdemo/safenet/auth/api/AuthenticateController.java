@@ -21,6 +21,12 @@
  */
 package com.thalesdemo.safenet.auth.api;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import javax.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 import java.util.Objects;
 import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
@@ -61,6 +67,22 @@ public class AuthenticateController {
 	private final Authenticate api;
 
 
+	/**
+	 * An instance of the CustomAuthenticate class for use in this controller.
+	 */
+
+    @Autowired
+    private CustomAuthenticate customApi;
+
+
+	/**
+	 * An instance of the HttpServletRequest class for use in this controller.
+	 */
+
+    @Autowired
+    private HttpServletRequest request;
+
+	
 	/**
 	 * Constructs a new AuthenticateController instance with the specified Authenticate dependency injected.
 	 * 
@@ -111,7 +133,7 @@ public class AuthenticateController {
 	
 	@PostMapping("/authenticate/{username}")
 	@Operation(summary = "Authenticate a user with credentials held in the SafeNet authentication server",
-			   description = "You can trigger a challenge using a blank code or with an empty request body. The state variable is optional unless when responding to a challenge.")
+			   description = "You can trigger a challenge using a blank code or with an empty request body, to the exception of push authentication. The state variable is optional in most cases, however it is mandatory when responding to a challenge. \n\nPush OTP authentication can be initiated using the special code `p` in the request body or using the query parameter `push_mode`, as described below.")
 	@ApiResponse(responseCode = "200", content = @Content(mediaType = "application/json",
 			   schema = @Schema(implementation = AuthenticationResponse.class),
 			   examples = @ExampleObject(description = "Success",
@@ -143,6 +165,20 @@ public class AuthenticateController {
 		    @Parameter(description="The unique identifier of the user") 
 		    @PathVariable("username") String username,
 		    
+			@Parameter(description="(**Optional**) The push mode setting; this parameter only applies to push authentication.<br/><br/>**Usage**" 
+								  + "<ul><li>when set to `one-step` or `quicklog` or when parameter `unset`— the push authentication request will be handled in a single step (a.k.a. quicklog)<br/>"
+								  +"→ the `state` parameter is not applicable with this push mode</li><br/>"
+					              +"<li>when set to `challenge-response`— the push authentication request will be handled in two steps, offering richer feedback in the user interface, by signaling if and when the push challenge was generated and pending user push approval<br/>"
+					              +"→ by setting this option to `challenge-response`, the client application must also set the `state` parameter in the request body of the second request</li></ul><br/>"
+								  +"**Specifications**<ul>" 
+								  +"<li>push authentication takes precedence over any OTP authentication method specified in the request body when the query parameter `push_mode` is set</li><br/>"
+								  +"<li>in the `challenge-response` mode, it is recommended to make second `/authenticate` request immediately after completing the first request</li><br/>"
+								  +"<li>the second request will be *parked* in the SafeNet Cloud parking server (e.g., sps.us.safenetid.com) for up to **120** seconds or **10** seconds for network connection timeouts</li><br/>"
+								  +"<li>push authentication can alternately be initiated by only sending the `code` parameter set to the single character `p` (<b>not</b> case-sensitive) in the request body<br/>"
+								  +"→ the default value is `one-step` when push authentication is made without this query parameter but using this special `code` in the request body</li></ul>\n\n",
+								  schema = @Schema(type = "string", allowableValues = {"one-step (quicklog)", "challenge-response"}))
+			@RequestParam(value="push_mode", required=false) String pushMode,
+
 		    @Parameter(description="The authentication request object used in the request body of the /authenticate endpoint. " 
 		                             +"The request body is optional for challenge requests.")
 		    @RequestBody(required=false) 
@@ -153,6 +189,44 @@ public class AuthenticateController {
 		// Log that a POST request is incoming for the specified username.
 		Log.info("Incoming POST /api/v1/authenticate/" + username);
 
+		// Check headers for the client IP address.
+		String ipAddress = request.getHeader("X-Forwarded-For");
+		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+			ipAddress = request.getHeader("Proxy-Client-IP");
+		}
+		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+			ipAddress = request.getHeader("WL-Proxy-Client-IP");
+		}
+		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+			ipAddress = request.getHeader("HTTP_CLIENT_IP");
+		}
+		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+			ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
+		}
+		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+			ipAddress = request.getRemoteAddr();
+		}
+		
+		// If the IP address is a loopback address, get the real IP address from ifconfig.me.
+		if (ipAddress.equals("0:0:0:0:0:0:0:1") || ipAddress.equals("::1")) {
+			RestTemplate restTemplate = new RestTemplate();
+			ipAddress = restTemplate.getForObject("https://ifconfig.me/ip", String.class);
+			try {
+				ipAddress = InetAddress.getByName(ipAddress).getHostAddress();
+			} catch (UnknownHostException e) {
+				ipAddress = "127.0.0.1";
+			}
+		}
+
+		// Convert IPv6 address to IPv4 if necessary
+		if (ipAddress.contains(":")) {
+			int index = ipAddress.lastIndexOf(":");
+			ipAddress = ipAddress.substring(index + 1);
+		}
+		
+		// Log the client IP address in debug mode.
+		Log.fine("Client IP Address: " + ipAddress);
+
 		// If no request body is provided, create an empty AuthenticationRequest object.
 		// This handles cases where a challenge needs to be triggered.
 		authenticationRequest = authenticationRequest == null ? new AuthenticationRequest(username) : authenticationRequest.setUsername(username);
@@ -161,8 +235,17 @@ public class AuthenticateController {
 		String message = "Processing request body as: " + authenticationRequest.toString();
 		Log.fine(message);
 
-		// Validate the authentication code with the API and get the server's response.
-		AuthenticationResponse serverResponse = this.api.validateCode(authenticationRequest);
+		// If the request is a push authentication request, handle it differently. Push is not supported by the official SafeNet Java API.
+		// Push is triggered by sending the code "p" (or "P") in the request body or by setting the push_mode query parameter.
+		AuthenticationResponse serverResponse = null;
+		if (pushMode != null || "p".equalsIgnoreCase(authenticationRequest.getCode())) {
+			Log.info("Push OTP authentication request detected for user: " + authenticationRequest.getUsername());
+			serverResponse = this.customApi.pushOTP(authenticationRequest.getUsername(), ipAddress, authenticationRequest.getState(), pushMode);
+		}
+		else {
+			// Validate the authentication code with the official Java API and get the server's response.
+			serverResponse = this.api.validateCode(authenticationRequest);
+		}
 
 		// Log the response from the server for debugging purposes.
 		Log.info("Responding to authentication request for user: `" + authenticationRequest.getUsername() + "` with: " + serverResponse);
