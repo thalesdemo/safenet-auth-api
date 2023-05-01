@@ -6,7 +6,7 @@
 
 <h2>Important Notice</h2>
 
-Thank you for your interest in our demo project! It is important to note that the project is currently under active development. Please also note that this project has been independently developed and is not an official software released by Thales for end-users or developers. <b>Please use the project at your own discretion and assume any potential risks associated with its use</b>.
+Thank you for your interest in our demo project! It is important to note that the project is in development. Please also note that this project has been independently developed and is not an official software released by Thales for end-users or developers. <b>Please use the project at your own discretion and assume any potential risks associated with its use</b>.
 
 <h2>Summary</h2>
 
