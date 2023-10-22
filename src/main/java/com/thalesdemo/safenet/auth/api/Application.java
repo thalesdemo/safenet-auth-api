@@ -26,13 +26,24 @@ package com.thalesdemo.safenet.auth.api;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+import com.thalesdemo.safenet.auth.api.exception.IniFilePathNotFoundException;
 
 @SpringBootApplication
+@ComponentScan(basePackages = "com.thalesdemo.safenet")
 @EnableConfigurationProperties
+@EnableScheduling
 public class Application {
-
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		try {
+			SpringApplication application = new SpringApplication(Application.class);
+			application.addInitializers(new WebSslPasswordInitializer());
+			application.run(args);
+		} catch (IniFilePathNotFoundException e) {
+			// System.err.println(e.getMessage());
+			System.exit(1); // Exit with a non-zero status to indicate an error.
+		}
 	}
-
 }

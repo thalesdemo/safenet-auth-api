@@ -130,6 +130,22 @@
 			<version>1.18.30</version> <!-- Use the latest version -->
 			<scope>provided</scope>
 		</dependency>
+		<!-- Token list dependencies -->
+		<dependency>
+			<groupId>com.sun.xml.messaging.saaj</groupId>
+			<artifactId>saaj-impl</artifactId>
+			<version>1.5.2</version>
+		</dependency>
+		<dependency>
+			<groupId>javax.xml.soap</groupId>
+			<artifactId>javax.xml.soap-api</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.13</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

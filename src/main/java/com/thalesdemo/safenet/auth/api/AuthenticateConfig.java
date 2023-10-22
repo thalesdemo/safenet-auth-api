@@ -22,6 +22,7 @@
  */
 package com.thalesdemo.safenet.auth.api;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -30,9 +31,14 @@ import java.util.Properties;
 import java.util.Optional;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+
+import com.thalesdemo.safenet.auth.api.exception.IniFilePathNotFoundException;
 
 @Configuration
 @DependsOn("propertiesInitializer")
@@ -71,6 +77,14 @@ public class AuthenticateConfig {
         if (JCRYPTO_INI_PATH == null || JCRYPTO_INI_PATH.trim().isEmpty()) {
             JCRYPTO_INI_PATH = "/app/config/config.ini";
             Log.warning("JCRYPTO_INI_PATH not defined. Setting INI path to default value: " + JCRYPTO_INI_PATH);
+        }
+
+        File iniFile = new File(JCRYPTO_INI_PATH);
+        if (!iniFile.exists() || iniFile.isDirectory()) {
+            String errorMessage = "The specified INI file path (" + JCRYPTO_INI_PATH
+                    + ") does not exist or is a directory.";
+            Log.severe(errorMessage);
+            throw new IniFilePathNotFoundException(errorMessage);
         }
 
         return JCRYPTO_INI_PATH;

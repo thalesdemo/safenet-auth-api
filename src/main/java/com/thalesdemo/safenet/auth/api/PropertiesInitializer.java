@@ -18,7 +18,7 @@ public class PropertiesInitializer {
 
     private static final Logger Log = Logger.getLogger(AuthenticateConfig.class.getName());
 
-    @Value("${safenet.ini.path:}")
+    @Value("${safenet.token-validator.ini-path:}")
     private void setIniPath(String iniPath) {
         System.out.println("Setting iniPath: " + iniPath); // Just for visualization
         this.iniPath = iniPath;
@@ -28,7 +28,7 @@ public class PropertiesInitializer {
     @PostConstruct
     private void postConstruct() {
         if (this.iniPath == null || this.iniPath.trim().isEmpty()) {
-            Log.warning("safenet.ini.path not found in properties/yml file.");
+            Log.warning("safenet.token-validator.ini-path not found in properties/yml file.");
         }
     }
 }
