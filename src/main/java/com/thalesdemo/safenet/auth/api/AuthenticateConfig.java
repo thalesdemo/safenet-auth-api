@@ -32,49 +32,63 @@ import java.util.logging.Logger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
-
-@Configuration 
+@Configuration
+@DependsOn("propertiesInitializer")
 public class AuthenticateConfig {
-	
-	/**
-	 * The logger instance used to log messages in this class.
-	 */
-	
-	private static final Logger Log = Logger.getLogger(AuthenticateConfig.class.getName());
 
-    
     /**
-     * The path to the INI file. If the JCRYPTO_INI_PATH environment variable is not set,
-     * return the default value '/app/config/config.ini' which is used by the Docker container.
+     * The logger instance used to log messages in this class.
+     */
+
+    private static final Logger Log = Logger.getLogger(AuthenticateConfig.class.getName());
+
+    private static String JCRYPTO_INI_PATH;
+
+    public static void setIniPath(String path) {
+        JCRYPTO_INI_PATH = path;
+    }
+
+    /**
+     * The path to the INI file. If the JCRYPTO_INI_PATH environment variable is not
+     * set,
+     * return the default value '/app/config/config.ini' which is used by the Docker
+     * container.
      * 
      * @return the path to the INI file
      */
 
     public static String getJcryptoIniPath() {
-    	// Check if the JCRYPTO_INI_PATH environment variable is set
-        String jCryptoIniPath = Optional.ofNullable(System.getenv("JCRYPTO_INI_PATH"))
-                  .orElse(System.getProperty("JCRYPTO_INI_PATH"));
-
-        // If the environment variable is not set, set JCRYPTO_INI_PATH to the default value
-        if(jCryptoIniPath == null || jCryptoIniPath.trim().isEmpty()) {
-            jCryptoIniPath = "/app/config/config.ini";
-            Log.warning("Environment variable JCRYPTO_INI_PATH not defined. Setting INI path to default value: " + jCryptoIniPath);
+        if (JCRYPTO_INI_PATH == null || JCRYPTO_INI_PATH.trim().isEmpty()) {
+            JCRYPTO_INI_PATH = System.getenv("SAFENET_INI_PATH");
         }
-        return jCryptoIniPath;
+
+        if (JCRYPTO_INI_PATH == null || JCRYPTO_INI_PATH.trim().isEmpty()) {
+            JCRYPTO_INI_PATH = System.getProperty("SAFENET_INI_PATH");
+        }
+
+        if (JCRYPTO_INI_PATH == null || JCRYPTO_INI_PATH.trim().isEmpty()) {
+            JCRYPTO_INI_PATH = "/app/config/config.ini";
+            Log.warning("JCRYPTO_INI_PATH not defined. Setting INI path to default value: " + JCRYPTO_INI_PATH);
+        }
+
+        return JCRYPTO_INI_PATH;
+
     }
 
-    
     /**
      * Get the authentication URL from the INI file based on the configuration keys.
-     * @param keyNameHttpProtocol key name for the HTTP protocol
-     * @param keyNameServerHost key name for the server host
-     * @param keyNameServerPort key name for the server port
+     * 
+     * @param keyNameHttpProtocol    key name for the HTTP protocol
+     * @param keyNameServerHost      key name for the server host
+     * @param keyNameServerPort      key name for the server port
      * @param keyNameRelativeUrlPath key name for the relative URL path
      * @return the authentication URL
      */
 
-    public static String getAuthUrlFromJcryptoIni(String keyNameHttpProtocol, String keyNameServerHost, String keyNameServerPort, String keyNameRelativeUrlPath) {
+    public static String getAuthUrlFromJcryptoIni(String keyNameHttpProtocol, String keyNameServerHost,
+            String keyNameServerPort, String keyNameRelativeUrlPath) {
         String jCryptoIniPath = getJcryptoIniPath();
 
         // read the file and extract the auth url
@@ -86,26 +100,26 @@ public class AuthenticateConfig {
             return null;
             // handle the exception, e.g. log an error message or throw a custom exception
         }
-        
+
         // Retrieve the values of the properties
         String protocol = props.getProperty(keyNameHttpProtocol);
         String server = props.getProperty(keyNameServerHost);
         String port = props.getProperty(keyNameServerPort);
         String path = props.getProperty(keyNameRelativeUrlPath);
-        
+
         // Form and return the absolute URL
         return String.format("%s://%s:%s%s", protocol, server, port, path);
     }
 
-
     /**
      * Get the agent key path from the INI file.
+     * 
      * @return the agent key path
      */
 
     public static String getAgentKeyPathFromJcryptoIni() {
         String jCryptoIniPath = getJcryptoIniPath();
-        
+
         // read the file and extract the agent key path
         Properties props = new Properties();
         try (FileInputStream in = new FileInputStream(jCryptoIniPath)) {
@@ -114,14 +128,14 @@ public class AuthenticateConfig {
             Log.severe("Could not read the INI file." + jCryptoIniPath);
             return "/app/secret/agent.key"; // default value
         }
-        
+
         // Retrieve the value of the property
         return props.getProperty("EncryptionKeyFile");
     }
 
-
     /**
      * Checks if the URL is valid.
+     * 
      * @param url the URL to check
      * @return true if the URL is valid, false otherwise
      */
@@ -137,26 +151,29 @@ public class AuthenticateConfig {
             return false;
         }
     }
-    
 
     /**
      * Get the primary authentication URL from the INI file.
+     * 
      * @return the primary authentication URL
      */
 
     public static String getPrimaryAuthUrlFromJcryptoIni() {
-        return getAuthUrlFromJcryptoIni("PrimaryProtocol", "PrimaryServer", "PrimaryServerPort", "PrimaryWebServiceRelativePath");
+        return getAuthUrlFromJcryptoIni("PrimaryProtocol", "PrimaryServer", "PrimaryServerPort",
+                "PrimaryWebServiceRelativePath");
     }
-
 
     /**
      * Get the secondary authentication URL from the INI file.
-     * @return the secondary authentication URL if it is defined in the INI file, otherwise the primary authentication URL
+     * 
+     * @return the secondary authentication URL if it is defined in the INI file,
+     *         otherwise the primary authentication URL
      */
 
     public static String getSecondaryAuthUrlFromJcryptoIni() {
 
-        String secondaryUrl = getAuthUrlFromJcryptoIni("SecondaryProtocol", "SecondaryServer", "SecondaryServerPort", "SecondaryWebServiceRelativePath");
+        String secondaryUrl = getAuthUrlFromJcryptoIni("SecondaryProtocol", "SecondaryServer", "SecondaryServerPort",
+                "SecondaryWebServiceRelativePath");
 
         if (secondaryUrl == null || secondaryUrl.trim().isEmpty() || !isValidUrl(secondaryUrl)) {
             Log.info("Secondary URL is not defined in the INI file. Mirroring the primary URL instead.");
@@ -165,7 +182,6 @@ public class AuthenticateConfig {
         return secondaryUrl;
     }
 
-
     /**
      * Creates a new instance of the Authenticate object and registers it as a bean
      * so that it can be used by other components.
@@ -173,21 +189,22 @@ public class AuthenticateConfig {
      * @return an instance of the Authenticate object
      * @throws Exception if an error occurs while creating the Authenticate object
      */
-	
+
     @Bean
     Authenticate authenticate() throws Exception {
-       Log.info("Registering configuration in @Bean Authenticate authenticate()...");
-        
+        Log.info("Registering configuration in @Bean Authenticate authenticate()...");
+
         String jCryptoIniPath = getJcryptoIniPath();
-        
+
         // This environment variable could be omitted or overridden.
-        // If so, the requests must contain JSON `"organization: "your_org_name"` in the body request
+        // If so, the requests must contain JSON `"organization: "your_org_name"` in the
+        // body request
         final String JCRYPTO_DEFAULT_ORGANIZATION = Optional.ofNullable(System.getenv("JCRYPTO_DEFAULT_ORGANIZATION"))
-        													.orElse(System.getProperty("JCRYPTO_DEFAULT_ORGANIZATION")); 
-        
-        // Return a new instance of Authenticate class with the default organization and the path to the INI file
+                .orElse(System.getProperty("JCRYPTO_DEFAULT_ORGANIZATION"));
+
+        // Return a new instance of Authenticate class with the default organization and
+        // the path to the INI file
         return new Authenticate(JCRYPTO_DEFAULT_ORGANIZATION, jCryptoIniPath);
     }
-    
-}
 
+}

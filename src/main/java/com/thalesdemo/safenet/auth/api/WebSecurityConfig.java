@@ -43,7 +43,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	 * called "API_KEY_HASH" using the Spring @Value annotation.
 	 */
 	
-	@Value("${API_KEY_HASH}")
+	@Value("${safenet.api.key.hash}")
 	private String API_KEY_HASH;
 
 	
