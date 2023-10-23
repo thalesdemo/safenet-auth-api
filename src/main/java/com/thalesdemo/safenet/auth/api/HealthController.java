@@ -38,6 +38,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -47,104 +48,128 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.thalesdemo.safenet.token.list.api.ApiException;
+import com.thalesdemo.safenet.token.list.api.PingService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
 
 @Controller
 @RequestMapping("/api/v1")
 @Tag(name = "Health")
 public class HealthController {
-	
+
 	/**
 	 * This logger will be used to log messages in the HealthController class.
 	 */
-	
+
 	private static final Logger Log = Logger.getLogger(HealthController.class.getName());
 
-	
 	/**
-	 * A reference to the Authenticate bean, which provides methods for authenticating API requests and checking the status
+	 * A reference to the Authenticate bean, which provides methods for
+	 * authenticating API requests and checking the status
 	 * of the SafeNet authentication service.
 	 * 
-	 * This field is autowired by Spring for use in this controller. The Authenticate bean is used by the endpoints in this
+	 * This field is autowired by Spring for use in this controller. The
+	 * Authenticate bean is used by the endpoints in this
 	 * controller to retrieve the status of the service
 	 */
-	
+
 	@Autowired
 	private Authenticate api;
-	
-	
 	/**
-	 * Check the server status of the SafeNet authentication service.
-	 *
-	 * This method returns the status of the remote service in JSON format. The status indicates whether the service is up
-	 * and running or not. The method requires authentication using the `X-API-Key` header. If the user is not authenticated, 
-	 * the method returns a 401 Unauthorized response. If the server status cannot be determined due to an unexpected error, 
-	 * the method returns a 500 Internal Server Error response.
-	 *
-	 * If the server is up, the method returns a 200 OK response with the status in the response body. The response body contains
-	 * a JSON object with two properties: `health` and `token_validator`. The `health` property indicates whether the server is up
-	 * or down, and can have the value `ok` or `error`, respectively. The `token_validator` property indicates whether the token
-	 * validator service is running or not, and can have the value `true` or `false`, respectively.
-	 *
-	 * Example response for a server that is up:
-	 * {
-	 *   "health": "ok",
-	 *   "token_validator": true
-	 * }
-	 *
-	 * Example response for a server that is down:
-	 * {
-	 *   "health": "error",
-	 *   "token_validator": false
-	 * }
-	 *
-	 * @return A ResponseEntity object containing the HTTP response and response body.
+	 * A reference to the BsidcaPingService which provides methods for
+	 * pinging and checking the connectivity of the Bsidca server.
+	 * 
+	 * This field is autowired by Spring for use in this controller. The
+	 * BsidcaPingService is used to enhance the health check details
+	 * by pinging the Bsidca server.
 	 */
-	
+	@Autowired
+	private PingService bsidcaPingService;
+
+	@Autowired
+	private Environment env; // to fetch properties from application.yaml
+
+	/**
+	 * Check the overall health status of the SafeNet authentication service and
+	 * the connectivity to the Bsidca server.
+	 *
+	 * The overall health status (`health`) is determined based on the status
+	 * of the SafeNet authentication service (`token_validator`) and the
+	 * connectivity status of the Bsidca server (`bsidca_soap_api`). The overall
+	 * health
+	 * status will be "ok" only if both services are operational. Otherwise,
+	 * it will be "error".
+	 * 
+	 * This method returns the status in JSON format and requires authentication
+	 * using the `X-API-Key` header. If the user is not authenticated, the method
+	 * returns a 401 Unauthorized response. In case of unexpected errors, it
+	 * returns a 500 Internal Server Error response.
+	 *
+	 * Example responses:
+	 * - All services operational:
+	 * {
+	 * "health": "ok",
+	 * "token_validator": true,
+	 * "bsidca_soap_api": true
+	 * }
+	 *
+	 * - Any service not operational:
+	 * {
+	 * "health": "error",
+	 * "token_validator": false,
+	 * "bsidca_soap_api": false
+	 * }
+	 *
+	 * @return The health status of the services as a HealthResponse object.
+	 */
+
 	@GetMapping("/health/check")
-	@Operation(
-		    summary = "Check the overall health state of this gateway",
-		    description = "This API endpoint returns information about the status of the service in JSON format. The response indicates whether the service is up and running or not. The endpoint requires authentication using the `X-API-Key` header. If the request is not authenticated, the method returns a 401 Unauthorized response. If the server status cannot be determined due to an unexpected error, the method returns a 500 Internal Server Error response.\n\n"
-		            + "Whether the server is up or down, the endpoint returns a 200 OK response with the status in the response body. The response body contains a JSON object with two properties: `health` and `token_validator`. The `health` property indicates the overall health of the gateway service, and can have the value `ok` or `error`. The `token_validator` property specifically indicates whether the SafeNet token validator service is ready to process requests or not, and can have the value `true` or `false`, respectively.\n\n"
-		)
+	@Operation(summary = "Check the overall health state of this gateway", description = "This API endpoint returns the overall health status of the SafeNet authentication service and the connectivity to the Bsidca server in JSON format. The overall health (`health`) will be \"ok\" only if both the SafeNet authentication service (`token_validator`) and the Bsidca server (`bsidca_soap_api`) are operational. Otherwise, it will be \"error\". The endpoint requires authentication using the `X-API-Key` header. If the request is not authenticated, the method returns a 401 Unauthorized response. If the server status cannot be determined due to an unexpected error, the method returns a 500 Internal Server Error response.\n\n"
+			+ "Whether the server is up or down, the endpoint returns a 200 OK response with the status in the response body. The response body contains a JSON object with properties: `health`, `token_validator`, and `bsidca_soap_api`. The `health` property indicates the overall health of the gateway service, and can have the value `ok` or `error`. The `token_validator` property specifically indicates whether the SafeNet token validator service is ready to process requests or not, and can have the value `true` or `false`, respectively. The `bsidca_soap_api` property indicates the connectivity status to the Bsidca server.")
 	@ApiResponses(value = {
-	    @ApiResponse(responseCode = "200", description = "The request is successful and the health of the service is returned in JSON format.", 
-	                 content = @Content(mediaType = "application/json", 
-	                 examples = {
-	                		 @ExampleObject(name="Operational", description="Example of the service being in an healthy state ", value = ResponseExamples.Health.OK),
-	                		 @ExampleObject(name="Malfunctioning", description="Example of the service being in an unhealthy state", value = ResponseExamples.Health.ERROR)
-	                		 }        																				
-	    )),
-	    @ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
-	    @ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the health of the service.", content = @Content)
+			@ApiResponse(responseCode = "200", description = "The request is successful and the health of the service is returned in JSON format.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = HealthResponse.class), examples = {
+					@ExampleObject(name = "Operational", description = "Example of the service being in an healthy state and Bsidca server is reachable", value = "{\"health\":\"ok\",\"token_validator\":true,\"bsidca_soap_api\":true}"),
+					@ExampleObject(name = "Malfunctioning", description = "Example of the service being in an unhealthy state or Bsidca server is not reachable", value = "{\"health\":\"error\",\"token_validator\":false,\"bsidca_soap_api\":false}")
+			})),
+			@ApiResponse(responseCode = "400", description = "The request is bad. This could be due to malformed request parameters or other client-side errors.", content = @Content),
+
+			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
+			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the health of the service.", content = @Content)
 	})
-	
-	public ResponseEntity<String> getHealthStatus() {
+
+	public ResponseEntity<HealthResponse> getHealthStatus() {
 		boolean tokenValidatorStatus = this.api.getServerStatus();
-		
-		String healthStatus = tokenValidatorStatus ? "ok" : "error";
-		
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode json = mapper.createObjectNode();
-		json.put("health", healthStatus);
-		json.put("token_validator", tokenValidatorStatus);
+		boolean useGetMethodFromConfig = Boolean
+				.parseBoolean(env.getProperty("safenet.bsidca.scheduling.ping-method", "false"));
 
-		String jsonString = "";
+		boolean bsidcaPingStatus = false;
 		try {
-			jsonString = mapper.writeValueAsString(json);
-		} catch (JsonProcessingException e) {
-			Log.log(Level.SEVERE, "An exception occurred while rendering the health status response", e);
+			ResponseEntity<Object> pingResponse = bsidcaPingService.handlePing(useGetMethodFromConfig);
+			bsidcaPingStatus = (pingResponse.getStatusCodeValue() == 200);
+			if (!bsidcaPingStatus) {
+				Log.log(Level.WARNING, "Error while pinging BSIDCA: {0}", pingResponse.getBody());
+			}
+		} catch (ApiException ex) {
+			Log.log(Level.WARNING, "Error while pinging BSIDCA: " + ex.getMessage());
 		}
-		
-		return new ResponseEntity<>(jsonString, HttpStatus.OK);
 
+		// Check overall health based on both statuses
+		boolean overallHealth = tokenValidatorStatus && bsidcaPingStatus;
+		String healthStatus = overallHealth ? "ok" : "error";
+
+		HealthResponse response = new HealthResponse();
+		response.setHealth(healthStatus);
+		response.setToken_validator(tokenValidatorStatus);
+		response.setBsidca_soap_api(bsidcaPingStatus);
+
+		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
-	
+
 }

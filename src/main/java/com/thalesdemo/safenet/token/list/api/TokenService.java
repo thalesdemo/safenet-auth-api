@@ -22,8 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.thalesdemo.safenet.auth.api.AuthenticatorResponses;
 import com.thalesdemo.safenet.token.list.api.requests.GetTokensSoapRequest;
 import com.thalesdemo.safenet.token.list.api.requests.GetTotalTokensSoapRequest;
 import com.thalesdemo.safenet.token.list.api.util.HttpRequestUtil;
@@ -226,7 +229,8 @@ public class TokenService {
         return soapClientService.getTokensByOwner(userName, organization, timeout);
     }
 
-    public List<String> getOptionsListByOwner(String userName, Optional<String> organization, int timeout)
+    public List<AuthenticatorResponses.AuthenticationOption> getOptionsListByOwner(String userName,
+            Optional<String> organization, int timeout)
             throws Exception {
         String org = organization.orElseGet(() -> {
             try {
@@ -238,7 +242,10 @@ public class TokenService {
             }
         });
 
-        return soapClientService.getOptionsListByOwner(userName, org, timeout);
+        List<String> optionsStringList = soapClientService.getOptionsListByOwner(userName, org, timeout);
+        return optionsStringList.stream()
+                .map(AuthenticatorResponses::fromString)
+                .collect(Collectors.toList());
     }
 
 }

@@ -58,7 +58,10 @@ public class HttpRequestUtil {
             httpPost.setHeader("Content-Type", contentType);
         }
         setCookies(httpPost, cookies);
-        logRequest(httpPost); // Log the request
+
+        // Refactor the logging function to accept the body as a string.
+        logRequest(httpPost, body); // Log the request
+
         return httpClient.execute(httpPost);
     }
 
@@ -69,7 +72,7 @@ public class HttpRequestUtil {
 
         setCookies(httpGet, cookies);
 
-        logRequest(httpGet); // Log the request
+        logRequest(httpGet, null); // Log the request with no body
         return httpClient.execute(httpGet);
     }
 
@@ -108,7 +111,7 @@ public class HttpRequestUtil {
         return headerValue.replace(sessionId, redactedId);
     }
 
-    private static void logRequest(HttpRequest request) {
+    private static void logRequest(HttpRequest request, String requestBody) {
         logger.fine("----- HTTP Request Start -----");
         logger.info(request.getRequestLine().toString());
 
@@ -124,17 +127,9 @@ public class HttpRequestUtil {
             logger.fine(headerName + ": " + headerValue);
         }
 
-        // Print the request body
-        if (request instanceof HttpEntityEnclosingRequest) {
-            HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-            if (entity != null && entity.isRepeatable()) {
-                try {
-
-                    logger.finest(redactOTPString(EntityUtils.toString(entity)));
-                } catch (IOException e) {
-                    logger.severe("Error reading request body: " + e.getMessage());
-                }
-            }
+        // Log the request body if provided
+        if (requestBody != null && !requestBody.isEmpty()) {
+            logger.finest(redactOTPString(requestBody));
         }
 
         logger.fine("----- HTTP Request End -----");
@@ -149,7 +144,7 @@ public class HttpRequestUtil {
 
     public static String redactTextWithinMarkers(String input, String markerStart, String markerEnd) {
         // Construct the regular expression pattern to match text within markers
-        String regex = Pattern.quote(markerStart) + ".*?" + Pattern.quote(markerEnd);
+        String regex = Pattern.quote(markerStart) + "(.*?)" + Pattern.quote(markerEnd);
 
         // Create a pattern object
         Pattern pattern = Pattern.compile(regex);
@@ -157,8 +152,8 @@ public class HttpRequestUtil {
         // Create a matcher object
         Matcher matcher = pattern.matcher(input);
 
-        // Replace all matches with stars
-        String output = matcher.replaceAll("******");
+        // Replace only the content between the markers with stars
+        String output = matcher.replaceAll(markerStart + "******" + markerEnd);
 
         return output;
     }

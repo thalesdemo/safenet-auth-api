@@ -1,5 +1,24 @@
 package com.thalesdemo.safenet.token.list.api;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.soap.SOAPMessage;
+
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.util.EntityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -9,45 +28,6 @@ import org.xml.sax.InputSource;
 import com.thalesdemo.safenet.token.list.api.requests.ConnectSoapRequest;
 import com.thalesdemo.safenet.token.list.api.util.HttpRequestUtil;
 import com.thalesdemo.safenet.token.list.api.util.SoapMessageUtil;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.net.URLEncoder;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.soap.SOAPMessage;
-
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.xml.soap.SOAPMessage;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 
 @Service
 public class SOAPClientService {
@@ -78,19 +58,20 @@ public class SOAPClientService {
             SOAPMessage connectRequest = ConnectSoapRequest.createConnectRequest(decryptedEmail, decryptedPassword,
                     null);
             logger.finest("connectRequest: " + SoapMessageUtil.soapMessageToString(connectRequest));
-            List<String> cookies = sendConnectSOAPRequest(connectRequest);
 
+            List<String> cookies = sendConnectSOAPRequest(connectRequest);
             configService.clearSensitiveData(decryptedEmail);
             configService.clearSensitiveData(decryptedPassword);
 
             configuration.setCookies(cookies);
-
             return "Connected with cookies: " + cookies + "\n";
 
+        } catch (ApiException ae) {
+            logger.severe("API error: " + ae.getMessage());
+            return ae.getMessage();
         } catch (ConnectionException ce) {
             logger.severe("Connection error: " + ce.getMessage());
             return "Connection failed due to: " + ce.getMessage();
-
         } catch (Exception e) {
             logger.severe("Unexpected error during connection: " + e.getMessage());
             return "Unexpected error during connection: " + e.getMessage();
@@ -110,21 +91,27 @@ public class SOAPClientService {
         HttpResponse response = sendSOAPRequest(request);
 
         int statusCode = response.getStatusLine().getStatusCode();
-
+        String responseBody = EntityUtils.toString(response.getEntity());
+        logger.log(Level.INFO, "SOAP BSIDCA Connect() Status Code Response: {0}", statusCode);
+        logger.log(Level.INFO, "SOAP BSIDCA Connect() Response Body:\n{0}", responseBody);
         // Check if the response is successful (status code 200) and contains the
         // "Set-Cookie" headers
         if (statusCode == 200) {
-            return extractCookiesFromResponse(response);
+            if (responseBody.contains("AUTH_SUCCESS")) {
+                return extractCookiesFromResponse(response);
+            } else if (responseBody.contains("AUTH_FAILURE")) {
+                throw new ApiException("Authentication failed");
+            } else {
+                throw new ApiException("Unexpected response content: " + responseBody);
+            }
         }
 
         // If status code is not 200, extract more details for the error message
         String reasonPhrase = response.getStatusLine().getReasonPhrase();
 
-        // You can further extract a brief message from the response body if available
-        String responseBody = EntityUtils.toString(response.getEntity());
-        String briefError = responseBody.length() > 100 ? responseBody.substring(0, 400) + "..." : responseBody;
+        String briefError = responseBody.length() > 400 ? responseBody.substring(0, 400) + "..." : responseBody;
 
-        throw new ConnectionException(String.format("Failed to extract Connect() cookies. Status: %d %s. Response: %s",
+        throw new ApiException(String.format("Failed to extract Connect() cookies. Status: %d %s. Response: %s",
                 statusCode, reasonPhrase, briefError));
     }
 
@@ -139,7 +126,7 @@ public class SOAPClientService {
     }
 
     public boolean pingConnection() {
-        return pingConnection(10, true);
+        return pingConnection(10, false);
     }
 
     public boolean pingConnection(boolean useGet) {
@@ -154,9 +141,12 @@ public class SOAPClientService {
         CloseableHttpResponse response = null;
 
         try {
-            // Check for null values.
-            if (configuration == null || configuration.getBaseUrl() == null || configuration.getCookies() == null) {
+            // Check for null values and if connected.
+            if (configuration == null || configuration.getBaseUrl() == null || !configuration.isConnected()) {
+                System.out.println("Not connected to BSIDCA server.");
                 return false;
+            } else {
+                System.out.println("Connected to BSIDCA server.");
             }
 
             if (useGet) {
@@ -224,85 +214,6 @@ public class SOAPClientService {
 
         return tokenStrings;
     }
-
-    // public TokenListDTO getTokensByOwner(String userName, String organization,
-    // int timeout) throws Exception {
-    // CloseableHttpResponse response = null;
-
-    // try {
-    // // Check for null values.
-    // SOAPConfiguration configuration = getConfiguration();
-
-    // String url = configuration.getBaseUrl() + "/GetTokensByOwner";
-    // url += "?userName=" + URLEncoder.encode(userName, "UTF-8") + "&organization="
-    // + URLEncoder.encode(organization, "UTF-8");
-
-    // response = HttpRequestUtil.sendGetRequest(url, configuration.getCookies(),
-    // timeout);
-
-    // if (response.getEntity() != null) {
-    // String responseString = EntityUtils.toString(response.getEntity());
-
-    // // Parse the XML response
-    // List<String> tokenSerials = parseXMLResponse(responseString);
-
-    // // Create TokenListDTO from the parsed data
-    // TokenListDTO tokenListDTO = new TokenListDTO();
-    // tokenListDTO.setSerials(tokenSerials);
-    // tokenListDTO.setOwner(userName);
-
-    // // Map token serials to types
-    // List<String> tokenTypes = mapSerialsToTypes(tokenSerials);
-    // tokenListDTO.setTypes(tokenTypes);
-
-    // return tokenListDTO;
-    // } else {
-    // throw new RuntimeException("Empty response from server.");
-    // }
-
-    // } finally {
-    // // Close the response to free up resources.
-    // if (response != null) {
-    // response.close();
-    // }
-    // }
-    // }
-    // public TokenListDTO getTokensByOwner(String userName, String organization,
-    // int timeout) throws Exception {
-    // CloseableHttpResponse response = null;
-
-    // try {
-    // // Check for null values.
-    // SOAPConfiguration configuration = getConfiguration();
-
-    // String url = configuration.getBaseUrl() + "/GetTokensByOwner";
-    // url += "?userName=" + URLEncoder.encode(userName, "UTF-8") + "&organization="
-    // + URLEncoder.encode(organization, "UTF-8");
-
-    // response = HttpRequestUtil.sendGetRequest(url, configuration.getCookies(),
-    // timeout);
-
-    // if (response.getEntity() != null) {
-    // String responseString = EntityUtils.toString(response.getEntity());
-
-    // // Parse the XML response
-    // List<String> tokenSerials = parseXMLResponse(responseString);
-
-    // // Map token serials to types and get unique presentation options
-    // TokenListDTO tokenListDTO = mapSerialsToTypesAndOptions(tokenSerials,
-    // userName);
-
-    // return tokenListDTO;
-    // } else {
-    // throw new RuntimeException("Empty response from server.");
-    // }
-    // } finally {
-    // // Close the response to free up resources.
-    // if (response != null) {
-    // response.close();
-    // }
-    // }
-    // }
 
     public TokenListDTO getTokensByOwner(String userName, String organization, int timeout) throws Exception {
         List<String> tokenSerials = fetchTokenSerialsByOwner(userName, organization, timeout);
