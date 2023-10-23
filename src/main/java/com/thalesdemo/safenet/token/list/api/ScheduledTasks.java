@@ -31,14 +31,17 @@ public class ScheduledTasks {
     @Autowired
     private TokenDataService tokenDataService;
 
-    @Value("${bsidca.scheduling.ping-interval}")
+    @Value("${safenet.bsidca.scheduling.ping-interval}")
     private int pingIntervalInSeconds;
 
-    @Value("${bsidca.scheduling.ping-retries}")
+    @Value("${safenet.bsidca.scheduling.ping-retries}")
     private int pingRetries;
 
-    @Value("${bsidca.scheduling.ping-timeout}")
+    @Value("${safenet.bsidca.scheduling.ping-timeout}")
     private int pingTimeoutInSeconds;
+
+    @Value("${safenet.bsidca.scheduling.ping-method}")
+    private String pingMethod;
 
     @PostConstruct
     public void init() throws Exception {
@@ -58,15 +61,15 @@ public class ScheduledTasks {
             logger.info("Storage file already exists. Skipping inventory fetch in startup initialization.");
 
             try {
-                List<TokenDataDTO> tokens = tokenDataService.loadTokensFromFile(configService.getTokenStorageFile());
+                List<TokenDataDTO> tokens = tokenDataService.loadTokensFromFile();
 
                 // Process the loaded tokens as needed
                 for (TokenDataDTO token : tokens) {
                     tokenDataService.addTokenType(token.getSerialNumber(), token.getType());
                 }
 
-                System.out.println("Loaded tokens from storage file: " + tokens.size());
-                System.out.println("tokenData: " + tokens);
+                logger.log(Level.INFO, "Loaded tokens from storage file: {0}", tokens.size());
+                logger.log(Level.FINE, "tokenData: {0}", tokens);
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error loading tokens from storage file.", e);
                 // Handle the IOException as needed (e.g., logging, fallback behavior)
@@ -74,13 +77,14 @@ public class ScheduledTasks {
         }
     }
 
-    @Scheduled(fixedRateString = "#{${bsidca.scheduling.ping-interval} * 1000}", initialDelayString = "#{${bsidca.scheduling.ping-interval} * 1000}")
+    @Scheduled(fixedRateString = "#{${safenet.bsidca.scheduling.ping-interval} * 1000}", initialDelayString = "#{${safenet.bsidca.scheduling.ping-interval} * 1000}")
     public void connectionKeepAlive() {
         try {
             for (int i = 0; i < pingRetries; i++) {
-                boolean resultPing = clientService.pingConnection(pingTimeoutInSeconds);
+                boolean resultPing = clientService.pingConnection(pingTimeoutInSeconds,
+                        "get".equalsIgnoreCase(pingMethod));
 
-                logger.log(Level.INFO, "Ping the connection every {0} seconds. Result = {1}",
+                logger.log(Level.INFO, "Ping result after {0} seconds: {1}",
                         new Object[] { pingIntervalInSeconds, resultPing });
 
                 if (resultPing) {
@@ -96,9 +100,9 @@ public class ScheduledTasks {
         }
     }
 
-    @Scheduled(cron = "${bsidca.scheduling.cron-inventory}")
+    @Scheduled(cron = "${safenet.bsidca.scheduling.cron-inventory}")
     public void getInventory() {
-        logger.info("Getting the inventory on the schedule defined in application.properties.");
+        logger.info("Getting the inventory on the schedule defined in application.yaml.");
 
         // Extract the parameters as required, for example:
         String state = null; // Or a default value if necessary

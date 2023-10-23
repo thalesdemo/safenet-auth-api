@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.ArrayList;
 
 @Component
-@ConfigurationProperties(prefix = "authentication-options")
+@ConfigurationProperties(prefix = "safenet.authentication-options")
 @Data
 
 public class AuthenticationOptions {

@@ -20,6 +20,7 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -34,10 +35,10 @@ import java.net.URLEncoder;
 @Service
 public class TokenService {
 
-    @Value("${bsidca.token.storage-file}")
+    @Value("${safenet.bsidca.token.storage-file}")
     private String storagePath;
 
-    @Value("${bsidca.connection-page-size:50}")
+    @Value("${safenet.bsidca.connection-page-size:100}")
     private int pageSize;
 
     @Autowired
@@ -172,8 +173,8 @@ public class TokenService {
 
     public void storeTokens(List<TokenDataDTO> tokens) {
         try {
-            TokenStorage.storeTokens(tokens, storagePath);
-        } catch (IOException e) {
+            TokenStorage.storeTokens(tokens, storagePath, configService.getEncryptionSecretKey());
+        } catch (Exception e) {
             logger.severe("Error storing tokens: " + e.getMessage());
         }
     }
@@ -186,9 +187,8 @@ public class TokenService {
 
             CloseableHttpResponse response = soapClientService.sendSOAPRequest(request);
             String responseBody = EntityUtils.toString(response.getEntity());
-
-            logger.info(String.format("Response Body: %s", responseBody));
-            System.out.println("Total tokens count response: " + response);
+            logger.log(Level.FINE, "SOAP GetOrganizationTotalTokenCount Response Header:\n{0}", response);
+            logger.log(Level.FINE, "SOAP GetOrganizationTotalTokenCount Response Body:{0}", responseBody);
 
             GetTotalTokensResponseDTO responseDto = extractTotalTokensFromResponseBody(responseBody);
 
@@ -237,8 +237,6 @@ public class TokenService {
                 throw new RuntimeException("Failed to retrieve default organization", e);
             }
         });
-
-        System.out.println("Organization =====> " + org);
 
         return soapClientService.getOptionsListByOwner(userName, org, timeout);
     }

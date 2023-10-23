@@ -11,25 +11,25 @@ public class ConfigService {
     @Value("${encryption.secret-key}")
     private String secretKey;
 
-    @Value("${operator.encrypted-email}")
+    @Value("${safenet.operator.encrypted-email}")
     private String encryptedEmail;
 
-    @Value("${operator.encrypted-password}")
+    @Value("${safenet.operator.encrypted-password}")
     private String encryptedPassword;
 
-    @Value("${bsidca.base-url}")
+    @Value("${safenet.bsidca.base-url}")
     private String baseUrl;
 
-    @Value("${bsidca.virtual-server-name}")
+    @Value("${safenet.bsidca.virtual-server-name}")
     private String virtualServerName;
 
-    @Value("${bsidca.scheduling.cron-inventory}")
+    @Value("${safenet.bsidca.scheduling.cron-inventory}")
     private String bsidcaSchedulingCronInventory;
 
-    @Value("${bsidca.connection-timeout}")
+    @Value("${safenet.bsidca.connection-timeout}")
     private Integer defaultHttpRequestTimeout;
 
-    @Value("${bsidca.token.storage-file}")
+    @Value("${safenet.bsidca.token.storage-file}")
     private String tokenStorageFile;
 
     public String getTokenStorageFile() {
@@ -62,6 +62,10 @@ public class ConfigService {
 
     public void clearSensitiveData(char[] sensitiveData) {
         SecurityUtil.clearSensitiveData(sensitiveData);
+    }
+
+    public String getEncryptionSecretKey() {
+        return secretKey;
     }
 
 }

@@ -77,7 +77,7 @@ public class SOAPClientService {
         try {
             SOAPMessage connectRequest = ConnectSoapRequest.createConnectRequest(decryptedEmail, decryptedPassword,
                     null);
-            System.out.println("connectRequest: " + SoapMessageUtil.soapMessageToString(connectRequest));
+            logger.finest("connectRequest: " + SoapMessageUtil.soapMessageToString(connectRequest));
             List<String> cookies = sendConnectSOAPRequest(connectRequest);
 
             configService.clearSensitiveData(decryptedEmail);
@@ -202,7 +202,7 @@ public class SOAPClientService {
         }
 
         // Log the extracted cookies to your logger
-        logger.log(Level.INFO, "Extracted Cookies from Response: {0}", cookies);
+        logger.log(Level.FINEST, "Extracted Cookies from Response: {0}", cookies);
 
         return cookies;
     }

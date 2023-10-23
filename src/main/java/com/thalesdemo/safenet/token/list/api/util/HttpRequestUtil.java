@@ -8,6 +8,9 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+
+import com.thalesdemo.safenet.token.list.api.ScheduledTasks;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -16,9 +19,15 @@ import org.apache.http.HttpResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.http.client.methods.HttpUriRequest;
 
 public class HttpRequestUtil {
+
+    private static final Logger logger = Logger.getLogger(HttpRequestUtil.class.getName());
 
     private HttpRequestUtil() {
         throw new UnsupportedOperationException("HttpRequestUtil is a utility class and cannot be instantiated");
@@ -72,13 +81,47 @@ public class HttpRequestUtil {
         }
     }
 
+    public static String redactASPNetSessionId(String headerValue) {
+        String prefix = "ASP.NET_SessionId=";
+        int startIndex = headerValue.indexOf(prefix);
+
+        if (startIndex == -1) {
+            return headerValue; // No session ID found
+        }
+
+        int sessionIdStart = startIndex + prefix.length();
+        int sessionIdEnd = headerValue.indexOf(';', sessionIdStart);
+
+        if (sessionIdEnd == -1) {
+            sessionIdEnd = headerValue.length();
+        }
+
+        String sessionId = headerValue.substring(sessionIdStart, sessionIdEnd);
+
+        if (sessionId.length() <= 6) {
+            // Redact the entire session ID for lengths <= 6
+            return headerValue.replace(sessionId, "*****");
+        }
+
+        String redactedId = sessionId.substring(0, 3) + "*".repeat(sessionId.length() - 6)
+                + sessionId.substring(sessionId.length() - 3);
+        return headerValue.replace(sessionId, redactedId);
+    }
+
     private static void logRequest(HttpRequest request) {
-        System.out.println("----- Request Start -----");
-        System.out.println(request.getRequestLine());
+        logger.fine("----- HTTP Request Start -----");
+        logger.info(request.getRequestLine().toString());
 
         // Print all headers
         for (Header header : request.getAllHeaders()) {
-            System.out.println(header.getName() + ": " + header.getValue());
+            String headerName = header.getName();
+            String headerValue = header.getValue();
+
+            if ("Cookie".equalsIgnoreCase(headerName)) {
+                headerValue = redactASPNetSessionId(headerValue);
+            }
+
+            logger.fine(headerName + ": " + headerValue);
         }
 
         // Print the request body
@@ -86,13 +129,38 @@ public class HttpRequestUtil {
             HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
             if (entity != null && entity.isRepeatable()) {
                 try {
-                    System.out.println(EntityUtils.toString(entity));
+
+                    logger.finest(redactOTPString(EntityUtils.toString(entity)));
                 } catch (IOException e) {
-                    System.out.println("Error reading request body: " + e.getMessage());
+                    logger.severe("Error reading request body: " + e.getMessage());
                 }
             }
         }
 
-        System.out.println("----- Request End -----");
+        logger.fine("----- HTTP Request End -----");
     }
+
+    public static String redactOTPString(String input) {
+        String markerStart = "<OTP>";
+        String markerEnd = "</OTP>";
+
+        return redactTextWithinMarkers(input, markerStart, markerEnd);
+    }
+
+    public static String redactTextWithinMarkers(String input, String markerStart, String markerEnd) {
+        // Construct the regular expression pattern to match text within markers
+        String regex = Pattern.quote(markerStart) + ".*?" + Pattern.quote(markerEnd);
+
+        // Create a pattern object
+        Pattern pattern = Pattern.compile(regex);
+
+        // Create a matcher object
+        Matcher matcher = pattern.matcher(input);
+
+        // Replace all matches with stars
+        String output = matcher.replaceAll("******");
+
+        return output;
+    }
+
 }
