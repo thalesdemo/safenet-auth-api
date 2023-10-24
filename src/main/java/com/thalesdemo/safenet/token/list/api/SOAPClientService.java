@@ -143,10 +143,8 @@ public class SOAPClientService {
         try {
             // Check for null values and if connected.
             if (configuration == null || configuration.getBaseUrl() == null || !configuration.isConnected()) {
-                System.out.println("Not connected to BSIDCA server.");
+                logger.log(Level.WARNING, "Not connected to BSIDCA server.");
                 return false;
-            } else {
-                System.out.println("Connected to BSIDCA server.");
             }
 
             if (useGet) {

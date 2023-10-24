@@ -102,12 +102,15 @@ public class IpAndHeaderBasedFilter implements Filter {
         // Use a custom response wrapper to capture the status code for logging
         StatusResponseWrapper responseWrapper = new StatusResponseWrapper(httpResponse);
 
+        String errorMessage = null;
+
         // Check if IP-based filtering is enabled and process accordingly
         if (config.isEnableIpBasedFiltering()) {
             String remoteIp = httpRequest.getRemoteAddr();
             if (!isIpAllowed(remoteIp, allowedIpMatchers)) {
-                setErrorResponse(httpResponse, HttpStatus.FORBIDDEN.value(), "Forbidden IP");
-                logRequestInfo(httpRequest, responseWrapper);
+                errorMessage = "Forbidden IP";
+                setErrorResponse(httpResponse, HttpStatus.FORBIDDEN.value(), errorMessage);
+                logRequestInfo(httpRequest, responseWrapper, errorMessage);
                 return;
             }
         }
@@ -117,25 +120,24 @@ public class IpAndHeaderBasedFilter implements Filter {
             String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
             if (xForwardedFor != null) {
                 if (!isIpAllowed(xForwardedFor.split(",")[0].trim(), allowedXForwardedMatchers)) {
-                    setErrorResponse(httpResponse, HttpStatus.FORBIDDEN.value(), "Forbidden X-Forwarded-For IP");
-                    logRequestInfo(httpRequest, responseWrapper);
+                    errorMessage = "Forbidden X-Forwarded-For IP";
+                    setErrorResponse(httpResponse, HttpStatus.FORBIDDEN.value(), errorMessage);
+                    logRequestInfo(httpRequest, responseWrapper, errorMessage);
                     return;
                 }
             } else if (config.isStrictEnforcementXForwardedForFiltering()) {
-                setErrorResponse(httpResponse, HttpStatus.FORBIDDEN.value(), "Missing X-Forwarded-For Header");
-                logRequestInfo(httpRequest, responseWrapper);
+                errorMessage = "Missing X-Forwarded-For Header";
+                setErrorResponse(httpResponse, HttpStatus.FORBIDDEN.value(), errorMessage);
+                logRequestInfo(httpRequest, responseWrapper, errorMessage);
                 return;
             }
         }
-
-        // Mark the request as processed by this filter before proceeding
-        httpRequest.setAttribute(FILTER_PROCESSED_REQUEST_ATTR, true);
 
         // Continue with the filter chain
         chain.doFilter(request, responseWrapper);
 
         // Log the request information after processing
-        logRequestInfo(httpRequest, responseWrapper);
+        logRequestInfo(httpRequest, responseWrapper, errorMessage);
     }
 
     /**
@@ -154,13 +156,20 @@ public class IpAndHeaderBasedFilter implements Filter {
         httpResponse.getWriter().write(jsonErrorMessage);
         httpResponse.getWriter().flush();
         httpResponse.getWriter().close();
+
+        // If our response is a wrapped one, set the error message.
+        if (httpResponse instanceof StatusResponseWrapper) {
+            ((StatusResponseWrapper) httpResponse).captureErrorMessage(message);
+        }
     }
 
     /**
-     * A custom wrapper around HttpServletResponse to capture the status code.
+     * A custom wrapper around HttpServletResponse to capture the status code and
+     * error message.
      */
     private static class StatusResponseWrapper extends HttpServletResponseWrapper {
-        private int httpStatus;
+        private Integer httpStatus;
+        private String errorMessage;
 
         public StatusResponseWrapper(HttpServletResponse response) {
             super(response);
@@ -175,17 +184,28 @@ public class IpAndHeaderBasedFilter implements Filter {
         @Override
         public void sendError(int sc, String msg) throws IOException {
             httpStatus = sc;
+            errorMessage = msg; // Capture the error message
             super.sendError(sc, msg);
         }
 
         @Override
         public void setStatus(int sc) {
-            httpStatus = sc;
+            if (httpStatus == null) {
+                httpStatus = sc;
+            }
             super.setStatus(sc);
         }
 
         public int getStatus() {
-            return httpStatus;
+            return (httpStatus != null) ? httpStatus : super.getStatus();
+        }
+
+        public void captureErrorMessage(String errorMessage) {
+            this.errorMessage = errorMessage;
+        }
+
+        public String getErrorMessage() {
+            return errorMessage;
         }
     }
 
@@ -204,16 +224,21 @@ public class IpAndHeaderBasedFilter implements Filter {
      * Logs the request information in the desired format.
      *
      * @param httpRequest     the HTTP request.
-     * @param responseWrapper the wrapped HTTP response to get status.
+     * @param responseWrapper the wrapped HTTP response to get status and error
+     *                        message.
      */
-    private void logRequestInfo(HttpServletRequest httpRequest, StatusResponseWrapper responseWrapper) {
+
+    private void logRequestInfo(HttpServletRequest httpRequest, StatusResponseWrapper responseWrapper,
+            String errorMessage) {
         String xForwardedFor = httpRequest.getHeader("X-Forwarded-For");
         if (xForwardedFor == null)
             xForwardedFor = "N/A";
 
-        String logMessage = String.format("%s | Remote-IP: %s | X-Forwarded-For: %s | URL: %s | rc=%d",
+        String errorLogMessage = (errorMessage != null) ? " | Error: " + errorMessage : "";
+
+        String logMessage = String.format("%s | Remote-IP: %s | X-Forwarded-For: %s | URL: %s | rc=%d%s",
                 httpRequest.getMethod(), httpRequest.getRemoteAddr(), xForwardedFor,
-                httpRequest.getRequestURI(), responseWrapper.getStatus());
+                httpRequest.getRequestURI(), responseWrapper.getStatus(), errorLogMessage);
 
         logger.info(logMessage);
     }
