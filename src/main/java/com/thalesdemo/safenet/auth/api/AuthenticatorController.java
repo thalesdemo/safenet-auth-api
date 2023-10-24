@@ -34,7 +34,15 @@ public class AuthenticatorController {
     @Operation(summary = "Retrieve authentication options by user", description = "Fetch available authentication options for a specific user. Can optionally filter by organization.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved options", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthenticatorResponses.OptionsResponse.class, defaultValue = "{\"options\": [\"push\", \"grid\", \"email\"]}"))),
-            @ApiResponse(responseCode = "500", description = "Internal server error occurred", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthenticatorResponses.ErrorResponse.class, defaultValue = "{\"errorMessage\": \"Internal server error occurred\", \"errorCode\": \"INTERNAL_SERVER_ERROR\"}")))
+            @ApiResponse(responseCode = "400", description = "The request contains malformed or invalid data", content = @Content),
+            @ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred while fetching the user's token options.", content = @Content)
+
+    // @ApiResponse(responseCode = "500", description = "Internal server error
+    // occurred", content = @Content(mediaType = "application/json", schema =
+    // @Schema(implementation = AuthenticatorResponses.ErrorResponse.class,
+    // defaultValue = "{\"errorMessage\": \"Internal server error occurred\",
+    // \"errorCode\": \"INTERNAL_SERVER_ERROR\"}")))
     })
 
     @GetMapping("/{username}/list-options")

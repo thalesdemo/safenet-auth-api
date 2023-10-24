@@ -49,40 +49,44 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Arrays;
 import java.util.List;
 
-
 @RestController
 @Tag(name = "Authentication")
 @RequestMapping("/api/v1")
 public class ResponseCodeController {
 
 	/**
-	 * Retrieves a list of all possible response codes for the SafeNet authentication service.
+	 * Retrieves a list of all possible response codes for the SafeNet
+	 * authentication service.
 	 *
-	 * @return A ResponseEntity object containing the HTTP response, as well as a JSON representation of the response code list.
+	 * @return A ResponseEntity object containing the HTTP response, as well as a
+	 *         JSON representation of the response code list.
 	 *         If the request is successful, the response code is 200.
 	 *         If the request fails due to authentication, the response code is 401.
-	 *         If the request fails due to an internal server error, the response code is 500.
+	 *         If the request fails due to an internal server error, the response
+	 *         code is 500.
 	 *
-	 * @implNote This endpoint returns a JSON object that contains all possible response codes for the SafeNet authentication service.
-	 *           The response codes are returned as an array of JSON objects, each of which contains the following fields:
+	 * @implNote This endpoint returns a JSON object that contains all possible
+	 *           response codes for the SafeNet authentication service.
+	 *           The response codes are returned as an array of JSON objects, each
+	 *           of which contains the following fields:
 	 *           - code: The numeric code that represents the response code.
 	 *           - name: The name of the response code.
 	 *           - message: A brief description of the response code.
-	 *           Note that the ResponseCode object also includes a custom response code (code 9) that is not returned by the SafeNet
-	 *           authentication service, but is instead used by this microservice to indicate a false challenge to handle a request.
+	 *           Note that the ResponseCode object also includes a custom response
+	 *           code (code 9) that is not returned by the SafeNet
+	 *           authentication service, but is instead used by this microservice to
+	 *           indicate a false challenge to handle a request.
 	 *
 	 * @see ResponseCode
 	 */
-	
+
 	@GetMapping("/authenticate/response-codes")
-	@Operation(summary = "Retrieve a list of all response codes available in the SafeNet authentication service",
-    description = "Note that the ResponseCode object also includes a custom response code (code 9) that is not returned by the SafeNet authentication service, but is instead used by this microservice to indicate a false challenge to handle a request.")
+	@Operation(summary = "Retrieve a list of all response codes available in the SafeNet authentication service", description = "Note that the ResponseCode object also includes a custom response code (code 9) that is not returned by the SafeNet authentication service, but is instead used by this microservice to indicate a false challenge to handle a request.")
 	@ApiResponses(value = {
-	    @ApiResponse(responseCode = "200", description = "The request is successful and the list of response codes is returned.", 
-	                 content = @Content(mediaType = "application/json", examples = @ExampleObject(description="Example of all the status response codes.", 
-	                                                                                                value = ResponseExamples.Codes.ALL))),
-	    @ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
-	    @ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the list of response codes.", content = @Content)
+			@ApiResponse(responseCode = "200", description = "The request is successful and the list of response codes is returned.", content = @Content(mediaType = "application/json", examples = @ExampleObject(description = "Example of all the status response codes.", value = ResponseExamples.Codes.ALL))),
+			@ApiResponse(responseCode = "400", description = "The request is malformed or invalid.", content = @Content),
+			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
+			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the list of response codes.", content = @Content)
 	})
 	@JsonView(ResponseCodeViews.WithCode.class)
 	public ResponseEntity<String> getAllResponseCodes() {
