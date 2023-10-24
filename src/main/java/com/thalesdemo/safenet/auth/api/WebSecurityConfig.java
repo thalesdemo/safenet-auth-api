@@ -16,33 +16,41 @@
  * @author Cina Shaykhian
  * @contact hello@onewelco.me
  */
+
 package com.thalesdemo.safenet.auth.api;
 
 import java.util.logging.Logger;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
+import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
+import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class WebSecurityConfig {
 
     /**
      * This field stores the API key hash as a string. The value of this field is
      * retrieved from an environment variable
      * called "API_KEY_HASH" using the Spring @Value annotation.
      */
-
     @Value("${safenet.api.key-hash}")
     private String API_KEY_HASH;
 
@@ -51,7 +59,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * initialized with the name of the class
      * for which it is used.
      */
-
     private static final Logger Log = Logger.getLogger(WebSecurityConfig.class.getName());
 
     /**
@@ -59,7 +66,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * BCryptPasswordEncoder is a password encoder that uses the BCrypt hash
      * function to encode passwords.
      */
-
     @Bean
     BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -74,7 +80,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
      * 
      * @return An instance of the {@link ApiKeyAuthService} class.
      */
-
     @Bean
     ApiKeyAuthService apiKeyAuthService() {
         Log.fine("Entered Config apiKeyAuthService @Bean");
@@ -82,29 +87,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     /**
-     * Configures the HTTP security for the application, setting session management
-     * policy to stateless and requiring
-     * an API key to access endpoints under the '/api' path.
-     * 
-     * If the API key is invalid, returns an HTTP status of 401 Unauthorized with a
-     * JSON error message.
-     * Disables CSRF protection, HTTP basic authentication, and form login, and sets
-     * the frame options for the headers
-     * to 'sameOrigin'.
-     * 
-     * @param http The HttpSecurity object to configure
-     * @throws Exception if an error occurs while configuring the HttpSecurity
+     * Bean configuration for the security filter chain. This chain applies the
+     * security configuration to incoming requests.
+     *
+     * @return the security filter chain
+     * @throws Exception if an exception occurs during the configuration process
      */
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, IpAndHeaderBasedFilter ipAndHeaderBasedFilter)
+            throws Exception {
         http
+                .addFilterBefore(ipAndHeaderBasedFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/**")
+                .mvcMatchers("/api/**")
                 .access("@apiKeyAuthService.checkApiKey(request)")
                 .and()
                 .exceptionHandling()
@@ -118,66 +116,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .httpBasic().disable()
                 .formLogin().disable()
                 .headers().frameOptions().sameOrigin();
+        return http.build();
     }
-
-    /**
-     * #TODO: To review all implementation available to suppress the following
-     * warning message at every start
-     * of the spring application:
-     * ```
-     * WARN 8376 --- [ restartedMain] .s.s.UserDetailsServiceAutoConfiguration :
-     * Using generated security password: e7c68bd2-9005-476b-8af0-330fa34a2482
-     *
-     * This generated password is for development use only. Your security
-     * configuration must be updated
-     * before running your application in production.
-     * ```
-     *
-     * This method configures the authentication manager that will be used by
-     * authenticationManagerBean() below.
-     * You can add your own authentication manager by extending
-     * WebSecurityConfigurerAdapter and overriding this
-     * method, or by creating a bean of type AuthenticationManager.
-     * 
-     * @param authManager the AuthenticationManagerBuilder to use for configuring
-     *                    the authentication manager
-     * @throws Exception if an error occurs while configuring the authentication
-     *                   manager
-     */
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder authManager) throws Exception {
-        // Code to configure your authentication manager
-        // ...
-        // This method is used by the Bean authenticationManagerBean()
-    }
-
-    /**
-     * Bean configuration for the AuthenticationManager, required to prevent Spring
-     * Boot auto-configuration.
-     * 
-     * This bean is necessary to prevent the generated security password warning
-     * message on run:
-     * ```
-     * WARN 8376 --- [ restartedMain] .s.s.UserDetailsServiceAutoConfiguration :
-     * Using generated security password: e7c68bd2-9005-476b-8af0-330fa34a2482
-     * This generated password is for development use only. Your security
-     * configuration must be updated before
-     * running your application in production.
-     * ```
-     *
-     * This configuration ensures that the AuthenticationManager is correctly set up
-     * and overrides the Spring Boot
-     * auto-configuration. It is used by the authenticationManager() method below.
-     *
-     * @return the authentication manager bean
-     * @throws Exception if an exception occurs during the configuration process
-     */
 
     @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        // Required to prevent spring boot auto-configuration
-        return super.authenticationManagerBean();
+    public AuthenticationManager customAuthenticationManager() {
+        return authentication -> {
+            throw new UnsupportedOperationException("No custom authentication manager defined");
+        };
     }
 
 }

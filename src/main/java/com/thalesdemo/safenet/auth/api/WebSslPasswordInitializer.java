@@ -18,7 +18,7 @@ public class WebSslPasswordInitializer implements ApplicationContextInitializer<
         String encryptionSecretKey = environment.getProperty("encryption.secret-key");
         try {
             char[] decryptedPassword = SecurityUtil.decrypt(encryptedKeystorePassword, encryptionSecretKey);
-            System.out.println("Decrypted Password: " + new String(decryptedPassword));
+            // System.out.println("Decrypted Password: " + new String(decryptedPassword));
 
             Map<String, Object> myMap = new HashMap<>();
             myMap.put("server.ssl.key-store-password", new String(decryptedPassword));
