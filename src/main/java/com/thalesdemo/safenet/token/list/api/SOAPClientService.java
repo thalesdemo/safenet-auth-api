@@ -16,7 +16,12 @@ import javax.xml.soap.SOAPMessage;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,6 +33,10 @@ import org.xml.sax.InputSource;
 import com.thalesdemo.safenet.token.list.api.requests.ConnectSoapRequest;
 import com.thalesdemo.safenet.token.list.api.util.HttpRequestUtil;
 import com.thalesdemo.safenet.token.list.api.util.SoapMessageUtil;
+
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 @Service
 public class SOAPClientService {
@@ -44,6 +53,13 @@ public class SOAPClientService {
     private AuthenticationOptions authenticationOptions;
 
     private SOAPConfiguration configuration;
+
+    private final CloseableHttpClient httpClient;
+
+    public SOAPClientService() {
+        this.configuration = null;
+        this.httpClient = HttpClientPool.getHttpClient();
+    }
 
     protected String connect() throws Exception {
         char[] decryptedEmail = configService.getDecryptedEmailValue();
@@ -78,7 +94,7 @@ public class SOAPClientService {
         }
     }
 
-    protected SOAPConfiguration getConfiguration() throws Exception {
+    public SOAPConfiguration getConfiguration() throws Exception {
         if (configuration == null || configuration.getCookies() == null || configuration.getCookies().isEmpty()) {
             // Logic to reconnect
             connect();
@@ -115,14 +131,35 @@ public class SOAPClientService {
                 statusCode, reasonPhrase, briefError));
     }
 
+    // protected CloseableHttpResponse sendSOAPRequest(SOAPMessage request) throws
+    // Exception {
+    // String soapMessageString = SoapMessageUtil.soapMessageToString(request);
+    // return HttpRequestUtil.sendPostRequest(
+    // configuration.getBaseUrl(),
+    // soapMessageString,
+    // configuration.getCookies(),
+    // "application/soap+xml; charset=utf-8",
+    // configService.getDefaultHttpRequestTimeout());
+    // }
+
     protected CloseableHttpResponse sendSOAPRequest(SOAPMessage request) throws Exception {
         String soapMessageString = SoapMessageUtil.soapMessageToString(request);
-        return HttpRequestUtil.sendPostRequest(
-                configuration.getBaseUrl(),
-                soapMessageString,
-                configuration.getCookies(),
-                "application/soap+xml; charset=utf-8",
-                configService.getDefaultHttpRequestTimeout());
+
+        // Since you're using SOAP, your content type is fixed as "application/soap+xml;
+        // charset=utf-8"
+        String contentType = "application/soap+xml; charset=utf-8";
+
+        // Get timeout from config service
+        Integer timeout = configService.getDefaultHttpRequestTimeout();
+
+        // Get the base URL from your configuration
+        String url = configuration.getBaseUrl();
+
+        // Get cookies from your configuration
+        List<String> cookies = configuration.getCookies();
+
+        // Use the refactored sendPostRequest method from HttpRequestUtil
+        return HttpRequestUtil.sendPostRequest(url, soapMessageString, cookies, contentType, timeout);
     }
 
     public boolean pingConnection() {
@@ -229,10 +266,15 @@ public class SOAPClientService {
             SOAPConfiguration configuration = getConfiguration();
 
             String url = configuration.getBaseUrl() + "/GetTokensByOwner";
-            url += "?userName=" + URLEncoder.encode(userName, "UTF-8") + "&organization="
-                    + URLEncoder.encode(organization, "UTF-8");
 
-            response = HttpRequestUtil.sendGetRequest(url, configuration.getCookies(), timeout);
+            // Construct the request body for x-www-form-urlencoded
+            String requestBody = "userName=" + URLEncoder.encode(userName, "UTF-8")
+                    + "&organization=" + URLEncoder.encode(organization, "UTF-8");
+
+            // Use the refactored sendPostRequest method from HttpRequestUtil with the
+            // correct content type
+            response = HttpRequestUtil.sendPostRequest(url, requestBody, configuration.getCookies(),
+                    "application/x-www-form-urlencoded", timeout);
 
             if (response.getEntity() != null) {
                 String responseString = EntityUtils.toString(response.getEntity());
@@ -290,4 +332,5 @@ public class SOAPClientService {
         }
         return tokenTypes;
     }
+
 }

@@ -9,6 +9,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
+import com.thalesdemo.safenet.token.list.api.HttpClientPool;
 import com.thalesdemo.safenet.token.list.api.ScheduledTasks;
 
 import org.apache.http.Header;
@@ -33,6 +34,44 @@ public class HttpRequestUtil {
         throw new UnsupportedOperationException("HttpRequestUtil is a utility class and cannot be instantiated");
     }
 
+    // public static CloseableHttpResponse sendPostRequest(String url, String body,
+    // List<String> cookies,
+    // String contentType, Integer timeout) throws Exception {
+
+    // if (timeout == null) {
+    // timeout = 15; // 15 seconds
+    // }
+
+    // CloseableHttpClient httpClient = HttpClients.createDefault();
+    // HttpPost httpPost = new HttpPost(url);
+
+    // RequestConfig requestConfig = RequestConfig.custom()
+    // .setSocketTimeout(timeout * 1000)
+    // .setConnectTimeout(timeout * 1000)
+    // .build();
+    // httpPost.setConfig(requestConfig);
+
+    // if (body != null && !body.isEmpty()) {
+    // StringEntity entity = new StringEntity(body);
+    // httpPost.setEntity(entity);
+    // }
+
+    // if (contentType != null) {
+    // httpPost.setHeader("Content-Type", contentType);
+    // }
+    // setCookies(httpPost, cookies);
+
+    // // Refactor the logging function to accept the body as a string.
+    // logRequest(httpPost, body); // Log the request
+
+    // return httpClient.execute(httpPost);
+    // }
+
+    public static CloseableHttpResponse sendPostRequest(String url, List<String> cookies, Integer timeout)
+            throws Exception {
+        return sendPostRequest(url, null, cookies, null, timeout);
+    }
+
     public static CloseableHttpResponse sendPostRequest(String url, String body, List<String> cookies,
             String contentType, Integer timeout) throws Exception {
 
@@ -40,7 +79,8 @@ public class HttpRequestUtil {
             timeout = 15; // 15 seconds
         }
 
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        // Use HttpClient from the pool
+        CloseableHttpClient httpClient = HttpClientPool.getHttpClient();
         HttpPost httpPost = new HttpPost(url);
 
         RequestConfig requestConfig = RequestConfig.custom()
@@ -59,8 +99,8 @@ public class HttpRequestUtil {
         }
         setCookies(httpPost, cookies);
 
-        // Refactor the logging function to accept the body as a string.
-        logRequest(httpPost, body); // Log the request
+        // Log the request
+        logRequest(httpPost, body);
 
         return httpClient.execute(httpPost);
     }

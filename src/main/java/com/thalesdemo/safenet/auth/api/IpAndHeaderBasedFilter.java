@@ -96,7 +96,7 @@ public class IpAndHeaderBasedFilter implements Filter {
         // Check if the request has already been processed by this filter
         if (httpRequest.getAttribute(FILTER_PROCESSED_REQUEST_ATTR) != null) {
             chain.doFilter(request, response);
-            return;
+            return; // Exit early if the request has been processed
         }
 
         // Use a custom response wrapper to capture the status code for logging
@@ -132,6 +132,9 @@ public class IpAndHeaderBasedFilter implements Filter {
                 return;
             }
         }
+
+        // Mark the request as processed
+        httpRequest.setAttribute(FILTER_PROCESSED_REQUEST_ATTR, true);
 
         // Continue with the filter chain
         chain.doFilter(request, responseWrapper);

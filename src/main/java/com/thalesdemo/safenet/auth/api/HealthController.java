@@ -146,6 +146,7 @@ public class HealthController {
 
 	public ResponseEntity<HealthResponse> getHealthStatus() {
 		boolean tokenValidatorStatus = this.api.getServerStatus();
+		// TODO: fix parseBoolean since the values from config are either "POST" or "GET"
 		boolean useGetMethodFromConfig = Boolean
 				.parseBoolean(env.getProperty("safenet.bsidca.scheduling.ping-method", "false"));
 

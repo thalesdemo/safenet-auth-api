@@ -52,6 +52,7 @@ public class AuthenticatorController {
             @Parameter(description = "(**Optional**) The organization for which to retrieve authentication options.") @RequestParam(required = false) Optional<String> organization) {
 
         try {
+            // TODO: fix timeout to be configurable from application.properties
             List<AuthenticatorResponses.AuthenticationOption> optionsList = tokenService.getOptionsListByOwner(username,
                     organization, 10000);
             return ResponseEntity.ok(new AuthenticatorResponses.OptionsResponse(optionsList));
