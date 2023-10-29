@@ -2,10 +2,10 @@ encryption:
   secret-key: ${ENCRYPTION_SECRET_KEY} # Must be a 256-bit key for AES-256-GCM
 
 server:
-  port: <port-number> # HTTPS port, you can use any available port
+  port: <application-port-number> # HTTP(s) port, you can use any available port
   ssl:
-    enabled: <enable-ssl> # true or false
-    key-store: file:<path-to-your-pkcs12-file>
+    enabled: <application-enable-ssl> # true or false
+    key-store: file:<path-to-pkcs12-file>
     key-store-type: PKCS12
     encrypted-key-store-password: <encrypted-key-store-password>
     key-alias: <key-alias> # e.g. tomcat
@@ -26,10 +26,10 @@ safenet:
     resource-name: Authentication Gateway
     key-hash: <safenet-api-key-hash>
 
-    logging: INFO
+    logging: <application-logging-level>
 
   token-validator:
-    ini-path: config/linux.ini
+    ini-path: <install-dir>/config/linux.ini
 
   bsidca:
     base-url: <safenet-base-url>/bsidca/bsidca.asmx
@@ -43,7 +43,7 @@ safenet:
       ping-method: GET # Either GET or POST (case-insensitive)
       cron-inventory: "0 */5 * * * ?" # Every 5 minutes
     token:
-      storage-file: tokens.enc.json
+      storage-file: <install-dir>/tokens.enc.json
 
   operator:
     encrypted-email: <safenet_encrypted_operator_email>
