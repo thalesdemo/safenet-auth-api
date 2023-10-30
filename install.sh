@@ -70,13 +70,12 @@ download_to_dir() {
 prompt_user() {
     local prompt_message=$1
     local default_value=$2
-    
+
     # Check if a previous value exists
     if [[ -n $default_value ]] && [[ -n "${user_inputs[$default_value]}" ]]; then
         echo "${user_inputs[$default_value]}"
         return
     fi
-
 
     read -p "$prompt_message (Default: $default_value): " input_value
 
@@ -89,7 +88,6 @@ prompt_user() {
         echo "\"\""
         return
     fi
-
 
     # Store the user input value if it's not empty
     if [[ -n $input_value && -n $default_value ]]; then
@@ -119,6 +117,9 @@ read -p "Enter the installation directory (Default is the current directory): " 
 # Ensure the config directory exists
 ensure_dir_exists "$install_dir/config"
 
+# Ensure the log folder directory exists
+ensure_dir_exists "$install_dir/logs"
+
 # Download necessary files
 download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/alternate/jar/safenet-auth-api-0.0.6-alt.jar" "$install_dir/safenet-auth-api-0.0.6-alt.jar"
 download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/alternate/config/application.yaml" "$install_dir/config/application.yaml"
@@ -137,8 +138,8 @@ full_path="${base_url#*://}"
 # Check if a port is specified in the base_url
 if [[ "$full_path" =~ :[0-9]+ ]]; then
     # Extract port
-    safenet_port="${full_path%%/*}"  # Extract everything before the first "/"
-    safenet_port="${safenet_port##*:}"  # Extract everything after the last ":"
+    safenet_port="${full_path%%/*}"    # Extract everything before the first "/"
+    safenet_port="${safenet_port##*:}" # Extract everything after the last ":"
 
     # Extract FQDN without port
     fqdn="${full_path%%:*}"
@@ -166,9 +167,6 @@ replace_marker "$install_dir/config/linux.ini" "<safenet-protocol>" "$protocol"
 replace_marker "$install_dir/config/linux.ini" "<safenet-port>" "$safenet_port"
 replace_marker "$install_dir/config/linux.ini" "<safenet-relative-path>" "$path"
 
-
-
-
 # Prompt user for the path to Agent.bsidkey file
 while true; do
     default_bsidkey_path="$(pwd)/Agent.bsidkey"
@@ -191,20 +189,17 @@ done
 # Replace the marker in linux.ini with the provided file path
 replace_marker "$install_dir/config/linux.ini" "<safenet-bsidkey-file-path>" "$safenet_bsidkey_path"
 
-# Set agent logs path 
+# Set agent logs path
 replace_marker "$install_dir/config/linux.ini" "<install-dir>" "$install_dir"
 
 # Set install dir for configs in application.yaml
 replace_marker "$install_dir/config/application.yaml" "<install-dir>" "$install_dir"
-
-
 
 ### SSL/PORT
 
 # Prompt user for configurations
 application_port=$(prompt_user "Enter the application port number" "8080")
 enable_ssl=$(prompt_user "Do you want to enable SSL? (true/false)" "false")
-
 
 if [[ "$enable_ssl" == "true" ]]; then
     ssl_format=$(prompt_user "Do you have a PKCS12 file or PEM files? (pkcs12/pem)" "pkcs12")
@@ -234,8 +229,6 @@ replace_marker "$install_dir/config/application.yaml" "<application-enable-ssl>"
 replace_marker "$install_dir/config/application.yaml" "<path-to-pkcs12-file>" "$pkcs12_path"
 replace_marker "$install_dir/config/application.yaml" "<key-alias>" "$key_alias"
 
-
-
 #### BSIDKEY
 
 # Run the Java command and capture its output
@@ -245,15 +238,10 @@ keygen_output=$(java -jar $install_dir/keygen-1.0.jar)
 apiKey=$(echo "$keygen_output" | grep -oP '"apiKey":"\K[^"]+')
 apiKeyHash=$(echo "$keygen_output" | grep -oP '"apiKeyHash":"\K[^"]+')
 
-
 # Replace the marker in linux.ini with the apiKeyHash
 replace_marker "$install_dir/config/application.yaml" "<safenet-api-key-hash>" "$apiKeyHash"
 
-
-
-
 # Encryption part
-
 
 # Encryption utility function
 encrypt() {
@@ -271,7 +259,6 @@ read_password() {
     echo
 }
 
-
 # Generate the encryption key (you'd typically store and reuse this key, but for simplicity, we're generating it here)
 encryption_key=$(java "$install_dir/EncryptionUtility.java" generate)
 
@@ -287,7 +274,6 @@ encrypted_password=$(encrypt "$encryption_key" "$operator_password")
 
 # Encrypt the keystore password
 encrypted_keystore_password=$(encrypt "$encryption_key" "$keystore_password")
-
 
 # Replace encrypted markers in application.yaml
 replace_marker "$install_dir/config/application.yaml" "<safenet_encrypted_operator_email>" "$encrypted_email"
