@@ -117,7 +117,22 @@ public class ResponseCode {
     @Schema(description = "Response code for fake challenge.")
     public static final ResponseCode FAKE_CHALLENGE = new ResponseCode(9, "FAKE_CHALLENGE", "Your first factor credentials are invalid. Please enter valid credentials to proceed.");
 
+
+    /**
+     * Indicates that the authentication service (TokenValidator) is unavailable.
+     */
     
+    @Schema(description = "Response code for service TokenValidator unavailable.")
+    public static final ResponseCode TV_SERVICE_UNAVAILABLE = new ResponseCode(10, "TV_SERVICE_UNAVAILABLE", "The authentication service (TokenValidator) is currently unavailable. Please try again later.");
+
+    /**
+     * Indicates that the token management (BSIDCA) service is unavailable.
+     */
+
+    @Schema(description = "Response code for service BSIDCA unavailable.")
+    public static final ResponseCode BSIDCA_SERVICE_UNAVAILABLE = new ResponseCode(11, "BSIDCA_SERVICE_UNAVAILABLE", "The token management (BSIDCA) service is currently unavailable. Please try again later.");
+
+
     /**
      * The integer code for this response code.
      */
@@ -195,7 +210,9 @@ public class ResponseCode {
     	    ResponseCode.CHANGE_STATIC_PASSWORD,
     	    ResponseCode.STATIC_CHANGE_FAILED,
     	    ResponseCode.PIN_CHANGE_FAILED,
-    	    ResponseCode.FAKE_CHALLENGE
+    	    ResponseCode.FAKE_CHALLENGE,
+            ResponseCode.TV_SERVICE_UNAVAILABLE,
+            ResponseCode.BSIDCA_SERVICE_UNAVAILABLE
     	};
 
     

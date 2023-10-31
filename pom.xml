@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.thalesdemo</groupId>
 	<artifactId>safenet-auth-api</artifactId>
-	<version>0.0.6-alt</version>
+	<version>0.0.7-alt</version>
 	<name>SafeNet RESTful Authentication Gateway</name>
 	<description>An API for authenticating users using SafeNet tokens</description>
 	<developers>
@@ -22,7 +22,7 @@
 	</developers>
 	<properties>
 		<java.version>11</java.version>
-		<spring-security.version>5.6.12</spring-security.version>
+		<spring-security.version>5.8.8</spring-security.version>
 		<swagger.ui.version>4.15.5-c24</swagger.ui.version>
 	</properties>
 	<dependencyManagement>

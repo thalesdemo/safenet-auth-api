@@ -82,6 +82,7 @@ public class HealthController {
 
 	@Autowired
 	private Authenticate api;
+	
 	/**
 	 * A reference to the BsidcaPingService which provides methods for
 	 * pinging and checking the connectivity of the Bsidca server.

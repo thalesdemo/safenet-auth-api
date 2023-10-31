@@ -147,6 +147,16 @@ public class ResponseExamples {
 				+ "    \"code\": 9,\r\n"
 				+ "    \"name\": \"FAKE_CHALLENGE\",\r\n"
 				+ "    \"message\": \"Your first factor credentials are invalid. Please enter valid credentials to proceed.\"\r\n"
+				+ "  },\r\n"
+				+ "  {\r\n"
+				+ "    \"code\": 10,\r\n"
+				+ "    \"name\": \"TV_SERVICE_UNAVAILABLE\",\r\n"
+				+ "    \"message\": \"The authentication service (TokenValidator) is currently unavailable. Please try again later.\"\r\n"
+				+ "  },\r\n"
+				+ "  {\r\n"
+				+ "    \"code\": 11,\r\n"
+				+ "    \"name\": \"BSIDCA_SERVICE_UNAVAILABLE\",\r\n"
+				+ "    \"message\": \"The token management (BSIDCA) service is currently unavailable. Please try again later.\"\r\n"
 				+ "  }\r\n"
 				+ "]";
 	}

@@ -59,7 +59,12 @@ public class AuthenticateController {
 	
 	private static final Logger Log = Logger.getLogger(AuthenticateController.class.getName());
 
-	
+	/**
+	 * An instance of the HealthController class for use in this controller.
+	 */
+    @Autowired
+    private HealthController healthController;
+
 	/**
 	 * An instance of the Authenticate class for use in this controller.
 	 */
@@ -159,6 +164,8 @@ public class AuthenticateController {
 	@ApiResponse(responseCode = "400",
 			   content = @Content,
 			   description = "The request was invalid or incomplete, possibly due to malformed JSON data.")
+	@ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
+	
 	@JsonView(ResponseCodeViews.Standard.class)
 
 	public ResponseEntity<AuthenticationResponse> authenticate(
@@ -226,6 +233,14 @@ public class AuthenticateController {
 		
 		// Log the client IP address in debug mode.
 		Log.fine("Client IP Address: " + ipAddress);
+
+		// Check the health of the SafeNet authentication server and return SERVICE_UNAVAILABLE if TokenValidator is down.
+		if (!this.api.getServerStatus()) {
+			AuthenticationResponse authResponse = new AuthenticationResponse(null, ResponseCode.TV_SERVICE_UNAVAILABLE, null);
+			return new ResponseEntity<>(authResponse, HttpStatus.SERVICE_UNAVAILABLE);
+		} else {
+			Log.info("Health check OK. Continuing with authentication request.");
+		}
 
 		// If no request body is provided, create an empty AuthenticationRequest object.
 		// This handles cases where a challenge needs to be triggered.

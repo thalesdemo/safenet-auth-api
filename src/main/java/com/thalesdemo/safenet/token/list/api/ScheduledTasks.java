@@ -120,13 +120,17 @@ public class ScheduledTasks {
             // Consider re-throwing or handling the exception further as per your use-case
         }
 
-        List<TokenDataDTO> tokens = tokenService.getAllTokens(state, type, serial, container, organization);
+        try {
+            List<TokenDataDTO> tokens = tokenService.getAllTokens(state, type, serial, container, organization);
+        
+            tokenService.storeTokens(tokens);
 
-        tokenService.storeTokens(tokens);
-
-        // Store token types in TokenDataService
-        for (TokenDataDTO token : tokens) {
-            tokenDataService.addTokenType(token.getSerialNumber(), token.getType());
+            // Store token types in TokenDataService
+            for (TokenDataDTO token : tokens) {
+                tokenDataService.addTokenType(token.getSerialNumber(), token.getType());
+            }
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Error while getting (or storing) token inventory", e);
         }
     }
 
