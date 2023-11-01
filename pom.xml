@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>com.thalesdemo</groupId>
 	<artifactId>safenet-auth-api</artifactId>
-	<version>0.0.7-alt</version>
+	<version>0.0.8-alt</version>
 	<name>SafeNet RESTful Authentication Gateway</name>
 	<description>An API for authenticating users using SafeNet tokens</description>
 	<developers>
