@@ -71,6 +71,9 @@ import com.safenet.keycloak.agent.tokenvalidatoradapter.dto.tv.TokenValidatorReq
 import com.safenet.keycloak.agent.tokenvalidatoradapter.dto.tv.TokenValidatorResponseDTO;
 import com.safenet.keycloak.agent.tokenvalidatoradapter.dto.tv.TokenValidatorReturn;
 import com.safenet.keycloak.agent.tokenvalidatoradapter.dto.tv.TokenValidatorRequestDTO.TokenValidatorRequestBuilder;
+import com.thalesdemo.safenet.auth.commons.AuthenticationChallenge;
+import com.thalesdemo.safenet.auth.commons.AuthenticationResponse;
+import com.thalesdemo.safenet.auth.commons.ResponseCode;
 
 
 
