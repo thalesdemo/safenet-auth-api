@@ -5,13 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 
+import com.thalesdemo.safenet.server.Application;
+
 @TestPropertySource(properties = { "jcrypto.iniPath=C:\\safenet_javaapi\\JCryptoWrapper.ini" })
 @TestPropertySource(properties = { "API_SERVER_PORT=9999" })
 @TestPropertySource(properties = { "API_KEY_HASH=1234" })
 @TestPropertySource(properties = { "API_LOG_LEVEL=DEBUG" })
 @TestPropertySource(properties = { "HOST_AGENT_KEY_PATH=C:\\agent.key" })
 @TestPropertySource(properties = { "server.ssl.key-store-password=1234" })
-@SpringBootTest
+@SpringBootTest(classes = {Application.class})
 class ApplicationTests {
 
     @BeforeAll
