@@ -255,6 +255,14 @@ public class SOAPClientService {
         return mapSerialsToTypesAndOptions(tokenSerials, userName);
     }
 
+    // public List<String> getTokensByOwnerWithDetails(String userName, String
+    // organization, int timeout)
+    // throws Exception {
+    // List<String> tokenSerials = fetchTokenSerialsByOwner(userName, organization,
+    // timeout);
+    // return tokenSerials;
+    // }
+
     public List<String> getOptionsListByOwner(String userName, String organization, int timeout) throws Exception {
         List<String> tokenSerials = fetchTokenSerialsByOwner(userName, organization, timeout);
         return extractOptionsFromSerials(tokenSerials);

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,8 +27,15 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.thalesdemo.safenet.token.api.converters.ProvisionTokenResponseConverter;
+import com.thalesdemo.safenet.token.api.converters.RevokeTokenResponseConverter;
+import com.thalesdemo.safenet.token.api.converters.SoapResponseConverter;
+import com.thalesdemo.safenet.token.api.dto.TokenProvisionResponse;
+import com.thalesdemo.safenet.token.api.dto.TokenRevokeResponse;
 import com.thalesdemo.safenet.token.api.requests.GetTokensSoapRequest;
 import com.thalesdemo.safenet.token.api.requests.GetTotalTokensSoapRequest;
+import com.thalesdemo.safenet.token.api.requests.ProvisionTokenSoapRequest;
+import com.thalesdemo.safenet.token.api.requests.RevokeTokenSoapRequest;
 import com.thalesdemo.safenet.token.api.util.HttpRequestUtil;
 
 import org.w3c.dom.Document;
@@ -53,6 +61,12 @@ public class TokenService {
 
     @Autowired
     private AuthenticationOptions authenticationOptions;
+
+    @Autowired
+    private ProvisionTokenResponseConverter provisionTokenConverter;
+
+    @Autowired
+    private RevokeTokenResponseConverter revokeTokenConverter;
 
     // public String getPresentationTypeForTokenType(String tokenType) {
     // return authenticationOptions.getPresentationType(tokenType);
@@ -247,4 +261,54 @@ public class TokenService {
                 .collect(Collectors.toList());
     }
 
+    public TokenRevokeResponse revokeToken(String serial, String userName, String comment,
+            String revokeMode, boolean revokeStaticPassword,
+            String organization, int timeout) throws Exception {
+        // Ensure the SOAPClientService is connected
+        soapClientService.getConfiguration();
+
+        // Create the RevokeToken SOAP request
+        SOAPMessage revokeRequest = RevokeTokenSoapRequest.createRevokeTokenRequest(
+                serial, userName, comment, revokeMode, revokeStaticPassword, organization);
+
+        // Send the request and receive the response
+        try (CloseableHttpResponse response = soapClientService.sendSOAPRequest(revokeRequest)) {
+            // Handle the response
+            // (You might want to implement specific logic based on the response content)
+            if (response.getEntity() != null) {
+                String responseString = EntityUtils.toString(response.getEntity());
+                // Process the response as needed
+                return revokeTokenConverter.convertToDTO(responseString);
+
+            } else {
+                throw new RuntimeException("Empty response from server.");
+            }
+        }
+    }
+
+    public TokenProvisionResponse provisionToken(String userName, String tokenType, String organization)
+            throws Exception {
+        // Ensure the SOAPClientService is connected
+        soapClientService.getConfiguration();
+
+        SOAPMessage provisionRequest;
+        if (tokenType.equals("GrIDsure")) {
+            provisionRequest = ProvisionTokenSoapRequest.createProvisionGrIDsureTokenRequest(
+                    Collections.singletonList(userName), "Description here", organization);
+        } else {
+            provisionRequest = ProvisionTokenSoapRequest.createProvisionTokenRequest(
+                    Collections.singletonList(userName), tokenType, "Description here", organization);
+        }
+
+        // Send the request and receive the response
+        try (CloseableHttpResponse response = soapClientService.sendSOAPRequest(provisionRequest)) {
+            // Handle the response
+            if (response.getEntity() != null) {
+                String responseString = EntityUtils.toString(response.getEntity());
+                return (TokenProvisionResponse) provisionTokenConverter.convertToDTO(responseString);
+            } else {
+                throw new RuntimeException("Empty response from server.");
+            }
+        }
+    }
 }
