@@ -213,19 +213,6 @@ public class AuthenticateController {
 			ipAddress = request.getRemoteAddr();
 		}
 
-		// // If the IP address is a loopback address, get the real IP address from
-		// ifconfig.me.
-		// if (ipAddress.equals("0:0:0:0:0:0:0:1") || ipAddress.equals("::1")) {
-		// RestTemplate restTemplate = new RestTemplate();
-		// ipAddress = restTemplate.getForObject("https://ifconfig.me/ip",
-		// String.class);
-		// try {
-		// ipAddress = InetAddress.getByName(ipAddress).getHostAddress();
-		// } catch (UnknownHostException e) {
-		// ipAddress = "127.0.0.1";
-		// }
-		// }
-
 		// Convert IPv6 address to IPv4 if necessary
 		if (ipAddress.contains(":")) {
 			int index = ipAddress.lastIndexOf(":");
@@ -275,13 +262,14 @@ public class AuthenticateController {
 				+ serverResponse);
 
 		/*
-		 * If the authentication was denied or challenged, return a FORBIDDEN response.
-		 * Otherwise, return an OK response.
+		 * If the authentication was authenticated, return an OK response.
+		 * Otherwise, return a FORBIDDEN response.
 		 */
-		if (serverResponse.isDenied() || serverResponse.isChallenged()) {
-			return new ResponseEntity<>(serverResponse, HttpStatus.FORBIDDEN);
-		} else {
+		boolean isAuthenticated = serverResponse.isAuthenticated();
+		if (isAuthenticated) {
 			return new ResponseEntity<>(serverResponse, HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>(serverResponse, HttpStatus.FORBIDDEN);
 		}
 
 	}
