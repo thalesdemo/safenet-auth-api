@@ -21,12 +21,9 @@
  */
 package com.thalesdemo.safenet.server.controller;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
 import java.util.Objects;
 import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
@@ -51,6 +48,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.AdditionalPropertiesValue;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -68,8 +66,8 @@ public class AuthenticateController {
 	/**
 	 * An instance of the HealthController class for use in this controller.
 	 */
-	@Autowired
-	private HealthController healthController;
+	// @Autowired
+	// private HealthController healthController;
 
 	/**
 	 * An instance of the Authenticate class for use in this controller.
@@ -167,7 +165,7 @@ public class AuthenticateController {
 			})
 	})
 	@ApiResponse(responseCode = "401", content = @Content, description = "You have not authenticated to the API using the header X-API-Key.")
-	@ApiResponse(responseCode = "400", content = @Content, description = "The request was invalid or incomplete, possibly due to malformed JSON data.")
+	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = AdditionalPropertiesValue.TRUE)))
 	@ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
 
 	@JsonView(ResponseCodeViews.Standard.class)

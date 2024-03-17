@@ -1,38 +1,30 @@
 package com.thalesdemo.safenet.token.api;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 
-import org.apache.http.Header;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.w3c.dom.NodeList;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.thalesdemo.safenet.token.api.requests.GetTokensSoapRequest;
-import com.thalesdemo.safenet.token.api.requests.GetTotalTokensSoapRequest;
-import com.thalesdemo.safenet.token.api.util.HttpRequestUtil;
-
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import java.net.URLEncoder;
+import org.w3c.dom.NodeList;
+
+import com.thalesdemo.safenet.token.api.requests.GetTokensSoapRequest;
+import com.thalesdemo.safenet.token.api.requests.GetTotalTokensSoapRequest;
 
 @Service
 public class TokenService {
@@ -131,7 +123,7 @@ public class TokenService {
 
     private List<TokenDataDTO> extractTokensFromResponseBody(String xmlResponse) {
         List<TokenDataDTO> tokensList = new ArrayList<>();
-        ObjectMapper mapper = new ObjectMapper();
+        // ObjectMapper mapper = new ObjectMapper();
 
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -224,8 +216,18 @@ public class TokenService {
 
     // TODO: Default to application.yaml for organization if not supplied, similar
     // to getOptionsListByOwner
-    public TokenListDTO getTokensByOwner(String userName, String organization, int timeout) throws Exception {
-        return soapClientService.getTokensByOwner(userName, organization, timeout);
+    public TokenListDTO getTokensByOwner(String userName, Optional<String> organization, int timeout) throws Exception {
+        String org = organization.orElseGet(() -> {
+            try {
+                return configService.getOrganization();
+            } catch (Exception e) {
+                // We re-throw as a runtime exception here, so that we're not changing the
+                // method's exception contract.
+                throw new RuntimeException("Failed to retrieve default organization", e);
+            }
+        });
+        
+        return soapClientService.getTokensByOwner(userName, org, timeout);
     }
 
     public List<AuthenticatorResponses.AuthenticationOption> getOptionsListByOwner(String userName,

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -252,7 +254,9 @@ public class SOAPClientService {
 
     public TokenListDTO getTokensByOwner(String userName, String organization, int timeout) throws Exception {
         List<String> tokenSerials = fetchTokenSerialsByOwner(userName, organization, timeout);
-        return mapSerialsToTypesAndOptions(tokenSerials, userName);
+        System.out.println("Token serials: " + tokenSerials);
+        System.out.println("Organization: " + organization);
+        return mapSerialsToTokenDTOs(tokenSerials, userName);
     }
 
     public List<String> getOptionsListByOwner(String userName, String organization, int timeout) throws Exception {
@@ -303,26 +307,104 @@ public class SOAPClientService {
         return new ArrayList<>(presentationOptions);
     }
 
-    private TokenListDTO mapSerialsToTypesAndOptions(List<String> tokenSerials, String userName) {
-        // Create TokenListDTO from the parsed data
+    // private TokenListDTO mapSerialsToTypesAndOptions(List<String> tokenSerials,
+    // String userName) {
+    // // Create TokenListDTO from the parsed data
+    // TokenListDTO tokenListDTO = new TokenListDTO();
+    // tokenListDTO.setSerials(tokenSerials);
+    // tokenListDTO.setOwner(userName);
+
+    // // Map token serials to types
+    // List<String> tokenTypes = mapSerialsToTypes(tokenSerials);
+    // tokenListDTO.setTypes(tokenTypes);
+
+    // // Get unique presentation options
+    // Set<String> presentationOptions = new HashSet<>();
+    // for (String tokenType : tokenTypes) {
+    // List<String> options =
+    // authenticationOptions.getPresentationOptionsForTokenType(tokenType);
+    // presentationOptions.addAll(options);
+    // }
+    // tokenListDTO.setOptions(new ArrayList<>(presentationOptions));
+
+    // return tokenListDTO;
+    // }
+
+    private List<TokenDTO> createTokenDTOs(String serial, String type, List<String> options) {
+        List<TokenDTO> dtos = new ArrayList<>();
+
+        List<String> specialOptions = Arrays.asList("sms", "voice", "email");
+
+        if (Collections.disjoint(options, specialOptions)) {
+            TokenDTO tokenDto = new TokenDTO();
+            tokenDto.setSerial(serial);
+            tokenDto.setType(type);
+            dtos.add(tokenDto);
+            return dtos;
+        } else {
+            if (options.contains("sms")) {
+                TokenDTO smsDto = new TokenDTO();
+                smsDto.setSerial(serial);
+                smsDto.setType("sms");
+                // smsDto.setOptions(Arrays.asList("sms"));
+                smsDto.setPhoneNumber("xxxxxxxxxx"); // Ideally, fetch the actual number related to the token
+                dtos.add(smsDto);
+            }
+
+            if (options.contains("voice")) {
+                TokenDTO voiceDto = new TokenDTO();
+                voiceDto.setSerial(serial);
+                voiceDto.setType("voice");
+                voiceDto.setPhoneNumber("xxxxxxxxxx"); // Fetch the phone number for VOICE, same or differently
+                dtos.add(voiceDto);
+            }
+
+            if (options.contains("email")) {
+                TokenDTO emailDto = new TokenDTO();
+                emailDto.setSerial(serial);
+                emailDto.setType("email");
+                // emailDto.setOptions(Arrays.asList("email"));
+                emailDto.setEmail("xxxxxxxxxx"); // Fetch the actual email related to the token
+                dtos.add(emailDto);
+            }
+        }
+
+        return dtos;
+    }
+
+    private TokenListDTO mapSerialsToTokenDTOs(List<String> tokenSerials, String userName) {
         TokenListDTO tokenListDTO = new TokenListDTO();
-        tokenListDTO.setSerials(tokenSerials);
         tokenListDTO.setOwner(userName);
 
-        // Map token serials to types
-        List<String> tokenTypes = mapSerialsToTypes(tokenSerials);
-        tokenListDTO.setTypes(tokenTypes);
-
-        // Get unique presentation options
-        Set<String> presentationOptions = new HashSet<>();
-        for (String tokenType : tokenTypes) {
-            List<String> options = authenticationOptions.getPresentationOptionsForTokenType(tokenType);
-            presentationOptions.addAll(options);
+        List<TokenDTO> allTokenDTOs = new ArrayList<>();
+        for (String serial : tokenSerials) {
+            System.out.println("Serial: " + serial);
+            String tokenType = mapSerialToType(serial);
+            List<String> options = authenticationOptions.getPresentationOptionsForTokenType(mapSerialToType(serial));
+            allTokenDTOs.addAll(createTokenDTOs(serial, tokenType, options));
         }
-        tokenListDTO.setOptions(new ArrayList<>(presentationOptions));
 
+        tokenListDTO.setTokens(allTokenDTOs);
         return tokenListDTO;
     }
+
+    // private TokenListDTO mapSerialsToTokenDTOs(List<String> tokenSerials, String
+    // userName) {
+    // TokenListDTO tokenListDTO = new TokenListDTO();
+    // tokenListDTO.setOwner(userName);
+
+    // List<TokenDTO> tokenDTOs = new ArrayList<>();
+    // for (String serial : tokenSerials) {
+    // String tokenType = mapSerialToType(serial);
+    // List<String> options =
+    // authenticationOptions.getPresentationOptionsForTokenType(tokenType);
+    // TokenDTO tokenDTO = createTokenDTO(serial, tokenType, options);
+    // tokenDTOs.add(tokenDTO);
+    // }
+
+    // tokenListDTO.setTokens(tokenDTOs);
+    // return tokenListDTO;
+    // }
 
     private List<String> mapSerialsToTypes(List<String> tokenSerials) {
         List<String> tokenTypes = new ArrayList<>();
@@ -333,4 +415,7 @@ public class SOAPClientService {
         return tokenTypes;
     }
 
+    private String mapSerialToType(String serial) {
+        return tokenDataService.getTokenType(serial);
+    }
 }

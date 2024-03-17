@@ -25,7 +25,10 @@
 package com.thalesdemo.safenet.server.security;
 
 import java.util.logging.Logger;
-import javax.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import java.util.function.Supplier;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class ApiKeyAuthService {
@@ -69,7 +72,8 @@ class ApiKeyAuthService {
      * @return true if API key is valid, false otherwise
      */
 
-    public boolean checkApiKey(HttpServletRequest request) {
+    public boolean checkApiKey(Supplier<Authentication> authenticationSupplier, RequestAuthorizationContext context) {
+        HttpServletRequest request = context.getRequest();
 
         // Retrieve the value of the "X-API-Key" header from the incoming HTTP request
         String headerValue = request.getHeader("X-API-Key");
@@ -77,7 +81,7 @@ class ApiKeyAuthService {
         // If the header value is null, log an error and return false to indicate a
         // failed API key check
         if (headerValue == null) {
-            Log.severe("No API key found in header X-API-Key of the HTTP request!");
+            Log.warning("No API key found in header X-API-Key of the HTTP request!");
             return false;
         }
 

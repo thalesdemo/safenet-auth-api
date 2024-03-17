@@ -1,11 +1,11 @@
 package com.thalesdemo.safenet.auth.api;
 
 import java.util.logging.Logger;
-
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+
 
 @Component
 public class PropertiesInitializer {

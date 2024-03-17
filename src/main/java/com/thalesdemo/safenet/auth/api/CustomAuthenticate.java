@@ -312,7 +312,7 @@ public class CustomAuthenticate {
      * @return A custom `RestTemplate` object with timeouts and redirect handling.
      */
 
-    public RestTemplate restTemplateWithRedirect() {
+    private RestTemplate restTemplateWithRedirect() {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(CONNECT_TIMEOUT); // set connection timeout to 10 seconds
         requestFactory.setReadTimeout(READ_TIMEOUT); // set read timeout to 60 seconds
@@ -341,7 +341,7 @@ public class CustomAuthenticate {
      * 404 error (NOT_FOUND).
      */
 
-    public ResponseEntity<String> postParkingService(String authIdUrl) {
+    private ResponseEntity<String> postParkingService(String authIdUrl) {
 
         // create the RestTemplate with the request factory
         RestTemplate restTemplate = restTemplateWithRedirect();
@@ -393,7 +393,7 @@ public class CustomAuthenticate {
      * if the response is null.
      */
 
-    public String pushChallengeRequest(String username, String userIp) {
+    private String pushChallengeRequest(String username, String userIp) {
         // Build Token Validator request with the provided parameters
         TokenValidatorRequestBuilder builder = new TokenValidatorRequestBuilder();
         builder.resourceName(this.resourceName);
@@ -432,7 +432,7 @@ public class CustomAuthenticate {
      * it is empty or if the response is null.
      */
 
-    public String pushParkingService(String authIdUrl) {
+    private String pushParkingService(String authIdUrl) {
 
         ResponseEntity<String> response = postParkingService(authIdUrl);
 
@@ -448,7 +448,7 @@ public class CustomAuthenticate {
         }
 
         String responseBody = response.getBody();
-        Log.fine(response.getStatusCode() + " " + response.getStatusCodeValue() + " " + response.getBody());
+        Log.fine(response.getStatusCode() + " " + response.getBody());
 
         ObjectMapper mapper = new ObjectMapper();
         try {
@@ -497,7 +497,7 @@ public class CustomAuthenticate {
     * @return True if the response is successful and the authentication status is AUTH_SUCCESS, false otherwise.
     */
 
-    public boolean pushChallengeResponse(String username, String authId, String authStatus, String userIp) {
+    private boolean pushChallengeResponse(String username, String authId, String authStatus, String userIp) {
         // Build Token Validator request with the provided parameters
         TokenValidatorRequestBuilder builder = new TokenValidatorRequestBuilder();
         builder.username(username);

@@ -27,7 +27,6 @@ package com.thalesdemo.safenet.server;
 
 import java.util.Arrays;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,32 +45,27 @@ import io.swagger.v3.oas.models.tags.Tag;
 @Configuration
 public class SwaggerConfig {
 
-	/**
-	 * Injects the {@link BuildProperties} dependency.
-	 */
-
-	@Autowired
-	private BuildProperties buildProperties;
-
+	private static final String API_KEY_NAME = "X-API-Key";
 	/**
 	 * Configures and returns the OpenAPI instance for the Spring application using
 	 * the Springdoc OpenAPI library.
+	 * 
+	 * Injects the {@link BuildProperties} dependency.
 	 * 
 	 * @return the OpenAPI instance
 	 */
 
 	@Bean
-	OpenAPI springOpenApiConfig() {
+	OpenAPI springOpenApiConfig(BuildProperties buildProperties) {
 		return new OpenAPI()
 				.components(new Components()
-						.addSecuritySchemes("X-API-Key", new SecurityScheme()
+				.addSecuritySchemes(API_KEY_NAME, new SecurityScheme()
 								.type(SecurityScheme.Type.APIKEY)
 								.description(
-										"##### To access the endpoints listed on this page, the client key **must always be included** in the request headers using the `X-API-Key` field.")
+										"##### To access the endpoints listed on this page, the client key **must always be included** in the request headers using the `" + API_KEY_NAME +"` field.")
 								.in(SecurityScheme.In.HEADER)
-								.name("X-API-Key")))
-				.security(Arrays.asList(
-						new SecurityRequirement().addList("X-API-Key")))
+								.name(API_KEY_NAME)))
+				.security(Arrays.asList(new SecurityRequirement().addList(API_KEY_NAME)))
 				.tags(Arrays.asList(new Tag().name("Authentication").description("APIs for user authentication"),
 						new Tag().name("Grid Image")
 								.description("APIs for authentication challenges related to GrIDsure tokens"),

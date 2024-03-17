@@ -16,16 +16,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 
 import com.thalesdemo.safenet.auth.commons.ResponseCode;
 import com.thalesdemo.safenet.token.api.ApiException;
 import com.thalesdemo.safenet.token.api.AuthenticatorResponses;
 import com.thalesdemo.safenet.token.api.PingService;
+import com.thalesdemo.safenet.token.api.TokenDTO;
+import com.thalesdemo.safenet.token.api.TokenListDTO;
 import com.thalesdemo.safenet.token.api.TokenService;
-import com.thalesdemo.safenet.token.api.AuthenticatorResponses.AuthenticationOption;
-import com.thalesdemo.safenet.token.api.AuthenticatorResponses.ErrorResponse;
-import com.thalesdemo.safenet.token.api.AuthenticatorResponses.OptionsResponse;
 
 import org.springframework.core.env.Environment;
 
@@ -36,14 +34,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/authenticate")
-@Tag(name = "Authentication", description = "Endpoints related to user authentication options and procedures.")
+@Tag(name = "Authentication")
 public class AuthenticatorController {
 
     @Autowired
     private TokenService tokenService;
-
-    @Autowired
-    private HealthController healthController;
 
     /**
      * A reference to the BsidcaPingService which provides methods for
@@ -69,16 +64,17 @@ public class AuthenticatorController {
     @Operation(summary = "Retrieve authentication options by user", description = "Fetch available authentication options for a specific user. Can optionally filter by organization.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved options", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthenticatorResponses.OptionsResponse.class, defaultValue = "{\"options\": [\"push\", \"grid\", \"email\"]}"))),
-            @ApiResponse(responseCode = "400", description = "The request contains malformed or invalid data", content = @Content),
+            @ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to incomplete or malformed data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
             @ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
             @ApiResponse(responseCode = "500", description = "An unexpected error occurred while fetching the user's token options.", content = @Content),
             @ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
+    })
+
     // @ApiResponse(responseCode = "500", description = "Internal server error
     // occurred", content = @Content(mediaType = "application/json", schema =
     // @Schema(implementation = AuthenticatorResponses.ErrorResponse.class,
     // defaultValue = "{\"errorMessage\": \"Internal server error occurred\",
     // \"errorCode\": \"INTERNAL_SERVER_ERROR\"}")))
-    })
 
     @GetMapping("/{username}/list-options")
     public ResponseEntity<Object> getOptionsByOwner(
@@ -94,7 +90,7 @@ public class AuthenticatorController {
         boolean bsidcaPingStatus = false;
         try {
             ResponseEntity<Object> pingResponse = bsidcaPingService.handlePing(useGetMethodFromConfig);
-            bsidcaPingStatus = (pingResponse.getStatusCodeValue() == 200);
+            bsidcaPingStatus = (pingResponse.getStatusCode().value() == 200);
             if (!bsidcaPingStatus) {
                 logger.log(Level.WARNING, "Error while pinging BSIDCA: {0}", pingResponse.getBody());
             }
@@ -109,9 +105,17 @@ public class AuthenticatorController {
 
         try {
             // TODO: fix timeout to be configurable from application.properties
-            List<AuthenticatorResponses.AuthenticationOption> optionsList = tokenService.getOptionsListByOwner(username,
-                    organization, 10000);
-            return ResponseEntity.ok(new AuthenticatorResponses.OptionsResponse(optionsList));
+            // List<AuthenticatorResponses.AuthenticationOption> optionsList =
+            // tokenService.getOptionsListByOwner(username,
+            // organization, 10000);
+
+            // System.out.println("Options list: " + optionsList);
+
+            TokenListDTO tokenList = tokenService.getTokensByOwner(username, organization, 10000);
+            List<TokenDTO> tokens = tokenList.getTokens();
+            return ResponseEntity.ok(tokens);
+            // return ResponseEntity.ok(new
+            // AuthenticatorResponses.OptionsResponse(optionsList));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new AuthenticatorResponses.ErrorResponse(e.getMessage(), "INTERNAL_SERVER_ERROR"));

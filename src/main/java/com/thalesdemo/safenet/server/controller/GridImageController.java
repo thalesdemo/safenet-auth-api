@@ -123,7 +123,7 @@ public class GridImageController {
 			"If the request is successful, the image data is returned as a PNG byte array that is Base64-encoded.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "The request is successful and the image data is returned in Base64-encoded PNG format.", content = @Content(mediaType = MediaType.IMAGE_PNG_VALUE, schema = @Schema(type = "string", format = "binary"), examples = @ExampleObject(name = "Grid image", value = ResponseExamples.Authentication.GridImage))),
-			@ApiResponse(responseCode = "400", description = "The request is malformed and could not be processed correctly.", content = @Content),
+			@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
 			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
 			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while generating the image data.", content = @Content)
 	})
@@ -178,7 +178,7 @@ public class GridImageController {
 	@Operation(summary = "Render a GrIDsure base64-encoded PNG image based on the challenge string", description = "This endpoint converts the challenge data supplied in the `string` field into a GrIDsure base64-encoded PNG image.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "The request is successful and the GrIDsure base64-encoded PNG image is returned.", content = @Content(mediaType = MediaType.IMAGE_PNG_VALUE, schema = @Schema(type = "string", format = "binary"), examples = @ExampleObject(name = "Grid image", value = ResponseExamples.Authentication.GridImage))),
-			@ApiResponse(responseCode = "400", description = "The request is malformed and could not be processed correctly, or the challenge string supplied is invalid.", content = @Content),
+			@ApiResponse(responseCode = "400", description = "The request is malformed and could not be processed correctly, or the challenge string supplied is invalid.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
 			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
 			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while rendering the image data.", content = @Content)
 	})

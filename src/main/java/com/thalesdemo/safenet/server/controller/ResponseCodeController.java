@@ -33,6 +33,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -88,7 +89,7 @@ public class ResponseCodeController {
 	@Operation(summary = "Retrieve a list of all response codes available in the SafeNet authentication service", description = "Note that the ResponseCode object also includes a custom response code (code 9) that is not returned by the SafeNet authentication service, but is instead used by this microservice to indicate a false challenge to handle a request.")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "The request is successful and the list of response codes is returned.", content = @Content(mediaType = "application/json", examples = @ExampleObject(description = "Example of all the status response codes.", value = ResponseExamples.Codes.ALL))),
-			@ApiResponse(responseCode = "400", description = "The request is malformed or invalid.", content = @Content),
+			@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
 			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
 			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the list of response codes.", content = @Content)
 	})

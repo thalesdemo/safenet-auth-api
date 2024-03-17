@@ -1,23 +1,27 @@
 package com.thalesdemo.safenet.server.security;
 
-import org.springframework.security.web.util.matcher.IpAddressMatcher;
+import java.io.IOException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletResponseWrapper;
-
-import javax.annotation.PostConstruct;
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import jakarta.annotation.PostConstruct;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 
 /**
  * This filter enforces IP and X-Forwarded-For header based filtering.
@@ -62,7 +66,7 @@ public class IpAndHeaderBasedFilter implements Filter {
                 .map(IpAddressMatcher::new)
                 .collect(Collectors.toList());
 
-        logger.log(Level.INFO, "Network Config {0}", config.toString());
+        logger.log(Level.INFO, "Network Config {0}", config);
     }
 
     /**

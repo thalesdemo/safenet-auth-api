@@ -21,14 +21,22 @@ package com.thalesdemo.safenet.server.security;
 
 import java.util.logging.Logger;
 
-import javax.servlet.http.HttpServletResponse;
-
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -63,6 +71,10 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+
+    @Autowired
+    private ApplicationContext applicationContext;
+
     /**
      * Returns an instance of the {@link ApiKeyAuthService} class that uses a
      * {@link BCryptPasswordEncoder}
@@ -86,36 +98,64 @@ public class WebSecurityConfig {
      * @throws Exception if an exception occurs during the configuration process
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, IpAndHeaderBasedFilter ipAndHeaderBasedFilter)
+    SecurityFilterChain securityFilterChain(HttpSecurity http, IpAndHeaderBasedFilter ipAndHeaderBasedFilter)
             throws Exception {
         http
+                // Add your custom filter
                 .addFilterBefore(ipAndHeaderBasedFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeRequests()
-                .mvcMatchers("/api/**")
-                .access("@apiKeyAuthService.checkApiKey(request)")
-                .and()
-                .exceptionHandling()
-                .authenticationEntryPoint((request, response, authException) -> {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"Invalid API key\"}");
-                })
-                .and()
-                .csrf().disable()
-                .httpBasic().disable()
-                .formLogin().disable()
-                .headers().frameOptions().sameOrigin();
+
+                // Configure session management
+                .sessionManagement(
+                        sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // Configure URL authorization
+                .authorizeHttpRequests(authz -> authz
+                        .requestMatchers("/api/**").access(getAuthorizationManager())
+                        .anyRequest().permitAll()) // Explicitly permit all other requests
+
+                // Configure exception handling
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"Invalid API key\"}");
+                        }))
+
+                // Disable unnecessary features for API security
+                .csrf(csrf -> csrf.disable())
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .headers(headers -> headers
+                    // Customizing frame options
+                    .frameOptions(FrameOptionsConfig::sameOrigin)
+                );
+
         return http.build();
     }
 
+    private AuthorizationManager<RequestAuthorizationContext> getAuthorizationManager() {
+        return (authentication, context) -> {
+            ApiKeyAuthService apiKeyAuthService = applicationContext.getBean(ApiKeyAuthService.class);
+            boolean accessGranted = apiKeyAuthService.checkApiKey(authentication, context);
+            return new AuthorizationDecision(accessGranted);
+        };
+    }
+
     @Bean
-    public AuthenticationManager customAuthenticationManager() {
+    AuthenticationManager customAuthenticationManager() {
         return authentication -> {
             throw new UnsupportedOperationException("No custom authentication manager defined");
         };
+    }
+
+    @Bean
+    public FilterRegistrationBean<SwaggerUiFilter> swaggerUiFilter() {
+        FilterRegistrationBean<SwaggerUiFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new SwaggerUiFilter());
+        registrationBean.addUrlPatterns("/swagger-ui/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE); // Set the order
+        System.out.println("SwaggerUiFilter: /swagger-ui/*");
+        return registrationBean;
     }
 
 }

@@ -45,9 +45,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.thalesdemo.safenet.auth.api.Authenticate;
 import com.thalesdemo.safenet.token.api.ApiException;
 import com.thalesdemo.safenet.token.api.PingService;
@@ -140,8 +137,7 @@ public class HealthController {
 					@ExampleObject(name = "Operational", description = "Example of the service being in an healthy state and Bsidca server is reachable", value = "{\"health\":\"ok\",\"token_validator\":true,\"bsidca_soap_api\":true}"),
 					@ExampleObject(name = "Malfunctioning", description = "Example of the service being in an unhealthy state or Bsidca server is not reachable", value = "{\"health\":\"error\",\"token_validator\":false,\"bsidca_soap_api\":false}")
 			})),
-			@ApiResponse(responseCode = "400", description = "The request is bad. This could be due to malformed request parameters or other client-side errors.", content = @Content),
-
+			@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
 			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
 			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the health of the service.", content = @Content)
 	})
@@ -156,7 +152,7 @@ public class HealthController {
 		boolean bsidcaPingStatus = false;
 		try {
 			ResponseEntity<Object> pingResponse = bsidcaPingService.handlePing(useGetMethodFromConfig);
-			bsidcaPingStatus = (pingResponse.getStatusCodeValue() == 200);
+			bsidcaPingStatus = (pingResponse.getStatusCode().value() == 200);
 			if (!bsidcaPingStatus) {
 				Log.log(Level.WARNING, "Error while pinging BSIDCA: {0}", pingResponse.getBody());
 			}
