@@ -21,25 +21,9 @@
 		</developer>
 	</developers>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 		<spring-security.version>6.2.2</spring-security.version>
-		<!-- <swagger.ui.version>4.15.5-c24</swagger.ui.version> -->
 	</properties>
-	<!-- <dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.yaml</groupId>
-				<artifactId>snakeyaml</artifactId>
-				<version>1.32</version>
-			</dependency>
-		</dependencies>
-	</dependencyManagement> -->
-	<!-- <repositories>
-		<repository>
-			<id>local-libs</id>
-			<url>file://${project.basedir}/lib</url>
-		</repository>
-	</repositories> -->
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -60,23 +44,11 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>
-		<!-- <dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<version>1.6.14</version> -->
-		<!-- <exclusions>
-				<exclusion>
-					<groupId>org.webjars</groupId>
-					<artifactId>swagger-ui</artifactId>
-				</exclusion>
-			</exclusions> -->
-		<!-- </dependency> -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.4.0</version>
 		</dependency>
-
 		<!-- start of SafeNet dependencies -->
 		<dependency>
 			<groupId>com.thalesdemo</groupId>
@@ -129,47 +101,6 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency>
-			<groupId>io.swagger</groupId>
-			<artifactId>swagger-ui</artifactId>
-			<version>${swagger.ui.version}</version>
-		</dependency> -->
-		<dependency>
-			<groupId>io.swagger.core.v3</groupId>
-			<artifactId>swagger-annotations</artifactId>
-			<version>2.2.19</version>
-		</dependency>
-		<!-- Vulnerability patches -->
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-web</artifactId>
-			<version>6.1.5</version> <!--
-			https://security.snyk.io/vuln/SNYK-JAVA-ORGSPRINGFRAMEWORK-6444790 -->
-		</dependency>
-		<!-- <dependency>
-			<groupId>org.yaml</groupId>
-			<artifactId>snakeyaml</artifactId>
-			<version>2.2</version> SNYK-JAVA-ORGYAML-2806360
-		</dependency>  -->
-		<!-- 
-		<dependency>
-			<groupId>org.apache.tomcat.embed</groupId>
-			<artifactId>tomcat-embed-core</artifactId>
-			<version>9.0.87</version> Updated version without known security vulnerabilities 
-		</dependency> -->
-		<!-- 
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>1.2.13</version>  	SNYK-JAVA-CHQOSLOGBACK-6094942 
-		</dependency> -->
-		<!-- 
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>1.2.13</version>	SNYK-JAVA-CHQOSLOGBACK-6094942 
-		</dependency> -->
-
 		<!-- Other tools -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -196,22 +127,6 @@
 	</dependencies>
 	<build>
 		<plugins>
-			<!--
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>3.1.9</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-						<configuration>
-							<loaderImplementation>CLASSIC</loaderImplementation>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin> -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -224,7 +139,7 @@
 							<goal>repackage</goal>
 						</goals>
 						<configuration>
-							<!-- <loaderImplementation>CLASSIC</loaderImplementation> -->
+							<loaderImplementation>CLASSIC</loaderImplementation>
 							<additionalProperties>
 								<project.description>This is a demo project to authenticate users
 									against the SafeNet authentication platform using REST API
@@ -248,21 +163,6 @@
 					</archive>
 				</configuration>
 			</plugin>
-			<!-- 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-clean-plugin</artifactId>
-				<configuration>
-					<filesets>
-						<fileset>
-							<directory>${project.basedir}/bin</directory>
-							<includes>
-								<include>**/*</include>
-							</includes>
-						</fileset>
-					</filesets>
-				</configuration>
-			</plugin> -->
 		</plugins>
 	</build>
 </project>

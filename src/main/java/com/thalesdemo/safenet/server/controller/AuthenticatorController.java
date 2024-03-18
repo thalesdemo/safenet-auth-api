@@ -1,6 +1,11 @@
 package com.thalesdemo.safenet.server.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,14 +13,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Parameter;
 
 import com.thalesdemo.safenet.auth.commons.ResponseCode;
 import com.thalesdemo.safenet.token.api.ApiException;
@@ -25,19 +22,19 @@ import com.thalesdemo.safenet.token.api.TokenDTO;
 import com.thalesdemo.safenet.token.api.TokenListDTO;
 import com.thalesdemo.safenet.token.api.TokenService;
 
-import org.springframework.core.env.Environment;
-
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.List;
-import java.util.Optional;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/v1/authenticate")
 @Tag(name = "Authentication")
 public class AuthenticatorController {
 
-    @Autowired
     private TokenService tokenService;
 
     /**
@@ -48,10 +45,8 @@ public class AuthenticatorController {
      * BsidcaPingService is used to enhance the health check details
      * by pinging the Bsidca server.
      */
-    @Autowired
     private PingService bsidcaPingService;
 
-    @Autowired
     private Environment env; // to fetch properties from application.yaml
 
     /**
@@ -60,6 +55,11 @@ public class AuthenticatorController {
      */
 
     private static final Logger logger = Logger.getLogger(AuthenticatorController.class.getName());
+    public AuthenticatorController(TokenService tokenService, PingService bsidcaPingService, Environment env) {
+        this.tokenService = tokenService;
+        this.bsidcaPingService = bsidcaPingService;
+        this.env = env;
+    }
 
     @Operation(summary = "Retrieve authentication options by user", description = "Fetch available authentication options for a specific user. Can optionally filter by organization.")
     @ApiResponses(value = {
@@ -80,7 +80,11 @@ public class AuthenticatorController {
     public ResponseEntity<Object> getOptionsByOwner(
             @Parameter(description = "The unique identifier of the user.", required = true) @PathVariable String username,
 
-            @Parameter(description = "(**Optional**) The organization for which to retrieve authentication options.") @RequestParam(required = false) Optional<String> organization) {
+            @Parameter(description = "(**Optional**) The organization for which to retrieve authentication options.") @RequestParam(required = false) Optional<String> organization,
+
+            @Parameter(description = "Set to `true` for a compact response. Defaults to `false`.", schema = @Schema(type = "string", allowableValues = {
+                    "true",
+                    "false" })) @RequestParam(name = "compactResponse", defaultValue = "false") boolean compactResponse) {
 
         // Check the health of BSIDCA
         // TODO: fix this logic, and remove repetition from HealthController
@@ -95,7 +99,7 @@ public class AuthenticatorController {
                 logger.log(Level.WARNING, "Error while pinging BSIDCA: {0}", pingResponse.getBody());
             }
         } catch (ApiException ex) {
-            logger.log(Level.WARNING, "Error while pinging BSIDCA: " + ex.getMessage());
+            logger.log(Level.WARNING, "Error while pinging BSIDCA: {0}", ex.getMessage());
         }
 
         if (!bsidcaPingStatus) {
@@ -105,17 +109,15 @@ public class AuthenticatorController {
 
         try {
             // TODO: fix timeout to be configurable from application.properties
-            // List<AuthenticatorResponses.AuthenticationOption> optionsList =
-            // tokenService.getOptionsListByOwner(username,
-            // organization, 10000);
-
-            // System.out.println("Options list: " + optionsList);
-
-            TokenListDTO tokenList = tokenService.getTokensByOwner(username, organization, 10000);
-            List<TokenDTO> tokens = tokenList.getTokens();
-            return ResponseEntity.ok(tokens);
-            // return ResponseEntity.ok(new
-            // AuthenticatorResponses.OptionsResponse(optionsList));
+            if (compactResponse) {
+                List<AuthenticatorResponses.AuthenticationOption> optionsList = tokenService
+                        .getOptionsListByOwner(username, organization, 10000);
+                return ResponseEntity.ok(new AuthenticatorResponses.OptionsResponse(optionsList));
+            } else {
+                TokenListDTO tokenList = tokenService.getTokensByOwner(username, organization, 10000);
+                List<TokenDTO> tokens = tokenList.getTokens();
+                return ResponseEntity.ok(tokens);
+            }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new AuthenticatorResponses.ErrorResponse(e.getMessage(), "INTERNAL_SERVER_ERROR"));

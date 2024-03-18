@@ -131,12 +131,12 @@ public class Authenticate {
 
 		// Set the organization to use for authentication, either the input organization
 		// or the default organization
-		String organization = inputOrganization.orElse(this.organization);
+		String effectiveOrganization = inputOrganization.orElse(this.organization);
 
 		// Log information about the received username, passcode, and organization
-		Log.fine("Received username: " + username);
-		Log.fine("Received passcode: " + passcode);
-		Log.fine("Received org name: " + organization);
+		Log.log(Level.FINEST, "Received username: {0}",  username);
+		Log.log(Level.FINEST, "Received passcode: {0}",  passcode);
+		Log.log(Level.FINEST, "Received org name: {0}", effectiveOrganization);
 
 		// If the passcode is empty or null, log a warning and trigger a
 		// challenge-response
@@ -171,7 +171,7 @@ public class Authenticate {
 
 		// Add the input values to the array
 		arrData[0] = username; // username (input)
-		arrData[1] = organization; // organization (input)
+		arrData[1] = effectiveOrganization; // organization (input)
 		arrData[2] = passcode; // passcode (input)
 		arrData[10] = ""; // client IP address (input)
 
@@ -190,18 +190,18 @@ public class Authenticate {
 
 			// Extract the response data from the arrData array
 			String rawMsg = arrData[9];
-			int status = Integer.valueOf(arrData[7]);
+			int status = Integer.parseInt(arrData[7]);
 			String challengeName = arrData[5];
 			String challengeState = arrData[4];
 			String challengeData = arrData[3];
 
 			// Log information about the server response
-			Log.fine("Server response:");
-			Log.fine("status = " + status);
-			Log.fine("challengeName = " + challengeName);
-			Log.fine("challengeData: grid ascii string = " + challengeData);
-			Log.fine("challengeState: output_state -> challenge state variable = " + challengeState);
-			Log.fine("rawMsg: raw log message = " + rawMsg);
+			Log.log(Level.FINE, "Server response:");
+			Log.log(Level.FINE, "status = {0}", status);
+			Log.log(Level.FINE, "challengeName = {0}", challengeName);
+			Log.log(Level.FINE, "challengeData: grid ascii string = {0}", challengeData);
+			Log.log(Level.FINE, "challengeState: output_state -> challenge state variable = {0}", challengeState);
+			Log.log(Level.FINE, "rawMsg: raw log message = {0}", rawMsg);
 
 			// Create a new AuthenticationChallenge object and set its properties based on
 			// the response data
@@ -215,18 +215,18 @@ public class Authenticate {
 			// Handle the response status using a switch statement
 			switch (status) {
 				case RC.AUTH_SUCCESS:
-					Log.info("Authentication success for user: " + username);
+					Log.log(Level.INFO, "Authentication success for user: {0}", username);
 					break;
 				case RC.AUTH_FAILURE:
 				case RC.PIN_CHANGE_FAILED:
 				case RC.STATIC_CHANGE_FAILED:
-					Log.info("Authentication denied for user: " + username);
+					Log.log(Level.INFO, "Authentication denied for user: {0}", username);
 					break;
 				case RC.CHALLENGE:
-					Log.info("Registered an authentication challenge for user: " + username);
+					Log.log(Level.INFO, "Registered an authentication challenge for user: {0}", username);
 					break;
 				case RC.SERVER_PIN_PROVIDED:
-					Log.info("Encountered a case of Server PIN Provided.");
+					Log.log(Level.INFO, "Encountered a case of Server PIN Provided.");
 					break;
 				case RC.USER_PIN_CHANGE:
 					break;
@@ -261,14 +261,9 @@ public class Authenticate {
 
 	public AuthenticationResponse validateCode(String username, String passcode, String state,
 			Optional<String> organization) {
-
 		// Call sendToServerAuthenticate to send an authentication request to the
 		// CRYPTOCard API server
-		AuthenticationResponse result = this.sendToServerAuthenticate(username, passcode, state, organization);
-
-		// Return the server's response
-		return result;
-
+		return this.sendToServerAuthenticate(username, passcode, state, organization);
 	}
 
 	/**
@@ -292,7 +287,7 @@ public class Authenticate {
 		String challengeName = result.getChallenge().getChallengeName();
 
 		// If the challenge name is "GrIDsure", return the challenge data
-		if (challengeName.toLowerCase().equals("gridsure")) {
+		if (challengeName.equalsIgnoreCase("gridsure")) {
 			return challengeData;
 		}
 
@@ -311,7 +306,7 @@ public class Authenticate {
 		 * TODO: Make an option to switch to offer generation of random valid data.
 		 * For now, we are returning a hardcoded fake data.
 		 */
-		String fake_data = ".............G4M3..0V3R.............";
+		final String fake_data = ".............G4M3..0V3R.............";
 		return fake_data;
 	}
 
@@ -396,7 +391,7 @@ public class Authenticate {
 		} catch (Exception e) {
 			// Log an error message at the SEVERE level if checkServerStatus() throws an
 			// exception
-			Log.log(Level.SEVERE, "Failed to check server status: " + e.getMessage());
+			Log.log(Level.SEVERE, "Failed to check server status: {0}", e.getMessage());
 			Log.severe("Trace: " + Arrays.toString(arrData));
 			return false;
 		}

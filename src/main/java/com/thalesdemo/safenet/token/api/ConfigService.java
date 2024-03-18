@@ -32,15 +32,22 @@ public class ConfigService {
     @Value("${safenet.bsidca.token.storage-file}")
     private String tokenStorageFile;
 
+    @Value("${safenet.user-lockout.max-failed-attempts}")
+    private Integer userLockoutPolicy;
+
+    public Integer getUserLockoutPolicy() {
+        return userLockoutPolicy;
+    }
+
     public String getTokenStorageFile() {
         return tokenStorageFile;
     }
 
-    public String getBsidcaBaseUrl() throws Exception {
+    public String getBsidcaBaseUrl() {
         return baseUrl;
     }
 
-    public String getOrganization() throws Exception {
+    public String getOrganization() {
         return virtualServerName;
     }
 

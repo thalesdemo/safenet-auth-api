@@ -204,6 +204,7 @@ public class IpAndHeaderBasedFilter implements Filter {
             super.setStatus(sc);
         }
 
+        @Override
         public int getStatus() {
             return (httpStatus != null) ? httpStatus : super.getStatus();
         }
@@ -257,5 +258,6 @@ public class IpAndHeaderBasedFilter implements Filter {
      */
     @Override
     public void destroy() {
+        // Future use
     }
 }

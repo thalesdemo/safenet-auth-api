@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Objects;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -191,23 +192,24 @@ public class AuthenticateController {
 					+ "The request body is optional for challenge requests.") @RequestBody(required = false) @Schema(example = ResponseExamples.Authentication.AUTH_REQUEST) AuthenticationRequest authenticationRequest) {
 
 		// Log that a POST request is incoming for the specified username.
-		Log.info("Incoming POST /api/v1/authenticate/" + username);
+		Log.log(Level.INFO, "Incoming POST /api/v1/authenticate/{0}", username);
 
 		// Check headers for the client IP address.
 		String ipAddress = request.getHeader("X-Forwarded-For");
-		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+		String unknownString = "unknown";
+		if (ipAddress == null || ipAddress.isEmpty() || unknownString.equalsIgnoreCase(ipAddress)) {
 			ipAddress = request.getHeader("Proxy-Client-IP");
 		}
-		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+		if (ipAddress == null || ipAddress.isEmpty() || unknownString.equalsIgnoreCase(ipAddress)) {
 			ipAddress = request.getHeader("WL-Proxy-Client-IP");
 		}
-		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+		if (ipAddress == null || ipAddress.isEmpty() || unknownString.equalsIgnoreCase(ipAddress)) {
 			ipAddress = request.getHeader("HTTP_CLIENT_IP");
 		}
-		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+		if (ipAddress == null || ipAddress.isEmpty() || unknownString.equalsIgnoreCase(ipAddress)) {
 			ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
 		}
-		if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+		if (ipAddress == null || ipAddress.isEmpty() || unknownString.equalsIgnoreCase(ipAddress)) {
 			ipAddress = request.getRemoteAddr();
 		}
 
@@ -218,7 +220,7 @@ public class AuthenticateController {
 		}
 
 		// Log the client IP address in debug mode.
-		Log.fine("Client IP Address: " + ipAddress);
+		Log.log(Level.FINE, "Client IP Address: {0}", ipAddress);
 
 		// Check the health of the SafeNet authentication server and return
 		// SERVICE_UNAVAILABLE if TokenValidator is down.
@@ -256,8 +258,8 @@ public class AuthenticateController {
 		}
 
 		// Log the response from the server for debugging purposes.
-		Log.info("Responding to authentication request for user: `" + authenticationRequest.getUsername() + "` with: "
-				+ serverResponse);
+		String authResponseMessage = "Responding to authentication request for user: `" + authenticationRequest.getUsername() + "` with: " + serverResponse;
+		Log.info(authResponseMessage);
 
 		/*
 		 * If the authentication was authenticated, return an OK response.

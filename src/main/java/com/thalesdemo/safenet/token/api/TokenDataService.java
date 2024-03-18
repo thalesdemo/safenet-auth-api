@@ -2,7 +2,6 @@ package com.thalesdemo.safenet.token.api;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,12 +10,12 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thalesdemo.safenet.token.api.util.SecurityUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thalesdemo.safenet.token.api.util.SecurityUtil;
 
 @Service
 public class TokenDataService {
@@ -31,8 +30,9 @@ public class TokenDataService {
     private String storageFilePath;
 
     public TokenDataService() {
-        // Initialize the mapping in the constructor or load it from a file/database
-        // tokenTypeMapping = loadMappingFromFile();
+        // TokenDataService is used for storing and retrieving token info 
+        // from an encrypted file on the server. It is loaded with the
+        // ScheduledTasks bean in the application context.
     }
 
     public void addTokenType(String serial, String type) {
@@ -57,7 +57,8 @@ public class TokenDataService {
                 decryptedTokens = objectMapper.readValue(decryptedData, new TypeReference<List<TokenDataDTO>>() {
                 });
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "Error decrypting and loading tokens from file: " + e.getMessage(), e);
+                String errorMsg = "Error decrypting and loading tokens from file: " + e.getMessage();
+                logger.log(Level.SEVERE, errorMsg, e);
             }
         }
 
@@ -72,7 +73,6 @@ public class TokenDataService {
     // try (FileOutputStream outputStream = new FileOutputStream(storageFilePath)) {
     // outputStream.write(encryptedData.getBytes());
     // logger.info("Stored encrypted tokens to file");
-    // logger.info("TEMP!!!!!!!!!!! " + encryptedData);
     // } catch (Exception e) {
     // logger.log(Level.SEVERE, "Error saving tokens to file: " + e.getMessage(),
     // e);

@@ -9,14 +9,13 @@ import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 import javax.xml.soap.SOAPPart;
 
-public class GetTotalTokensSoapRequest {
+public class GetTokenSoapRequest {
 
-    private GetTotalTokensSoapRequest() {
+    private GetTokenSoapRequest() {
         throw new IllegalStateException("Utility class");
     }
 
-    public static SOAPMessage createGetTotalTokensRequest(String state, String type, String serial, String container,
-            String organization) throws SOAPException {
+    public static SOAPMessage createGetTokenRequest(String serial, String organization) throws SOAPException {
         MessageFactory factory = MessageFactory.newInstance(SOAPConstants.SOAP_1_2_PROTOCOL);
         SOAPMessage message = factory.createMessage();
         SOAPPart soapPart = message.getSOAPPart();
@@ -28,32 +27,16 @@ public class GetTotalTokensSoapRequest {
 
         SOAPBody body = envelope.getBody();
 
-        // Create the "GetTotalTokens" element and its child elements
-        SOAPElement getTotalTokensElement = body.addChildElement("GetTotalTokens", "",
-                "http://www.cryptocard.com/blackshield/");
-
-        if (state != null) {
-            SOAPElement stateElement = getTotalTokensElement.addChildElement("state");
-            stateElement.addTextNode(state);
-        }
-
-        if (type != null) {
-            SOAPElement typeElement = getTotalTokensElement.addChildElement("type");
-            typeElement.addTextNode(type);
-        }
+        // Create the "GetToken" element and its child elements
+        SOAPElement getTokenElement = body.addChildElement("GetToken", "", "http://www.cryptocard.com/blackshield/");
 
         if (serial != null) {
-            SOAPElement serialElement = getTotalTokensElement.addChildElement("serial");
+            SOAPElement serialElement = getTokenElement.addChildElement("serial");
             serialElement.addTextNode(serial);
         }
 
-        if (container != null) {
-            SOAPElement containerElement = getTotalTokensElement.addChildElement("container");
-            containerElement.addTextNode(container);
-        }
-
         if (organization != null) {
-            SOAPElement organizationElement = getTotalTokensElement.addChildElement("organization");
+            SOAPElement organizationElement = getTokenElement.addChildElement("organization");
             organizationElement.addTextNode(organization);
         }
 

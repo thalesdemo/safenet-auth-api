@@ -157,7 +157,7 @@ public class HealthController {
 				Log.log(Level.WARNING, "Error while pinging BSIDCA: {0}", pingResponse.getBody());
 			}
 		} catch (ApiException ex) {
-			Log.log(Level.WARNING, "Error while pinging BSIDCA: " + ex.getMessage());
+			Log.log(Level.WARNING, "Error while pinging BSIDCA: {0}", ex.getMessage());
 		}
 
 		// Check overall health based on both statuses

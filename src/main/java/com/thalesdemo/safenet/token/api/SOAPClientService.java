@@ -3,6 +3,7 @@ package com.thalesdemo.safenet.token.api;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URLEncoder;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -18,11 +19,7 @@ import javax.xml.soap.SOAPMessage;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,12 +30,13 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import com.thalesdemo.safenet.token.api.requests.ConnectSoapRequest;
+import com.thalesdemo.safenet.token.api.requests.GetTokenSoapRequest;
+import com.thalesdemo.safenet.token.api.requests.GetUserSoapRequest;
 import com.thalesdemo.safenet.token.api.util.HttpRequestUtil;
 import com.thalesdemo.safenet.token.api.util.SoapMessageUtil;
-
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import com.thalesdemo.safenet.token.api.util.TokenDetailsParser;
+import com.thalesdemo.safenet.token.api.util.TokenUtils;
+import com.thalesdemo.safenet.token.api.util.UserResponseParser;
 
 @Service
 public class SOAPClientService {
@@ -75,7 +73,7 @@ public class SOAPClientService {
         try {
             SOAPMessage connectRequest = ConnectSoapRequest.createConnectRequest(decryptedEmail, decryptedPassword,
                     null);
-            logger.finest("connectRequest: " + SoapMessageUtil.soapMessageToString(connectRequest));
+            logger.log(Level.FINE, "connectRequest: {0}", SoapMessageUtil.soapMessageToString(connectRequest));
 
             List<String> cookies = sendConnectSOAPRequest(connectRequest);
             configService.clearSensitiveData(decryptedEmail);
@@ -133,22 +131,8 @@ public class SOAPClientService {
                 statusCode, reasonPhrase, briefError));
     }
 
-    // protected CloseableHttpResponse sendSOAPRequest(SOAPMessage request) throws
-    // Exception {
-    // String soapMessageString = SoapMessageUtil.soapMessageToString(request);
-    // return HttpRequestUtil.sendPostRequest(
-    // configuration.getBaseUrl(),
-    // soapMessageString,
-    // configuration.getCookies(),
-    // "application/soap+xml; charset=utf-8",
-    // configService.getDefaultHttpRequestTimeout());
-    // }
-
     protected CloseableHttpResponse sendSOAPRequest(SOAPMessage request) throws Exception {
         String soapMessageString = SoapMessageUtil.soapMessageToString(request);
-
-        // Since you're using SOAP, your content type is fixed as "application/soap+xml;
-        // charset=utf-8"
         String contentType = "application/soap+xml; charset=utf-8";
 
         // Get timeout from config service
@@ -236,6 +220,10 @@ public class SOAPClientService {
 
     private List<String> parseXMLResponse(String xmlResponse) throws Exception {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
         DocumentBuilder builder = factory.newDocumentBuilder();
         InputSource is = new InputSource(new StringReader(xmlResponse));
         Document document = builder.parse(is);
@@ -254,9 +242,7 @@ public class SOAPClientService {
 
     public TokenListDTO getTokensByOwner(String userName, String organization, int timeout) throws Exception {
         List<String> tokenSerials = fetchTokenSerialsByOwner(userName, organization, timeout);
-        System.out.println("Token serials: " + tokenSerials);
-        System.out.println("Organization: " + organization);
-        return mapSerialsToTokenDTOs(tokenSerials, userName);
+        return mapSerialsToTokenDTOs(tokenSerials, userName, organization);
     }
 
     public List<String> getOptionsListByOwner(String userName, String organization, int timeout) throws Exception {
@@ -267,7 +253,6 @@ public class SOAPClientService {
     private List<String> fetchTokenSerialsByOwner(String userName, String organization, int timeout) throws Exception {
         CloseableHttpResponse response = null;
         try {
-            SOAPConfiguration configuration = getConfiguration();
 
             String url = configuration.getBaseUrl() + "/GetTokensByOwner";
 
@@ -307,47 +292,178 @@ public class SOAPClientService {
         return new ArrayList<>(presentationOptions);
     }
 
-    // private TokenListDTO mapSerialsToTypesAndOptions(List<String> tokenSerials,
-    // String userName) {
-    // // Create TokenListDTO from the parsed data
-    // TokenListDTO tokenListDTO = new TokenListDTO();
-    // tokenListDTO.setSerials(tokenSerials);
-    // tokenListDTO.setOwner(userName);
+    private String normalizeTokenStateValue(String state) {
 
-    // // Map token serials to types
-    // List<String> tokenTypes = mapSerialsToTypes(tokenSerials);
-    // tokenListDTO.setTypes(tokenTypes);
+        // <State>BASE_INVENTORY or NOT_INITIALIZED or REVOKED or INITIALIZED or
+        // CORRUPTED_INVENTORY or BASE_ALLOCATED or ALLOCATED or BASE_ASSIGNED or
+        // MANUALLY_ASSIGNED or ENROLLED_PIN_CHANGE or ENROLLMENT_PENDING or BASE_ACTIVE
+        // or ACTIVE_TOKEN or PIN_CHANGE or BASE_SUSPENDED or MANUAL_SUSPENSION or
+        // RULE_SUSPENSION or BASE_LOCKED or SERVER_LOCK or USER_LOCK or PIN_CHANGE_LOCK
+        // or CORRUPTED or BASE_LOST_FAILED or LOST_TOKEN or DAMAGED_TOKEN or
+        // BASE_DELETED or MANUAL_REMOVE or AUTO_REMOVE or BASE_PURGED or
+        // PURGED_TOKEN</State>
 
-    // // Get unique presentation options
-    // Set<String> presentationOptions = new HashSet<>();
-    // for (String tokenType : tokenTypes) {
-    // List<String> options =
-    // authenticationOptions.getPresentationOptionsForTokenType(tokenType);
-    // presentationOptions.addAll(options);
-    // }
-    // tokenListDTO.setOptions(new ArrayList<>(presentationOptions));
+        String normalizedState = ""; // Default empty or perhaps consider a default state
 
-    // return tokenListDTO;
-    // }
+        // Assuming 'state' is your input state variable
+        switch (state.toUpperCase()) { // Convert to upper case for case-insensitive comparison
 
-    private List<TokenDTO> createTokenDTOs(String serial, String type, List<String> options) {
+            // Active States
+            case "BASE_ACTIVE":
+            case "ACTIVE_TOKEN":
+            case "BASE_ASSIGNED":
+            case "MANUALLY_ASSIGNED":
+                normalizedState = "active";
+                break;
+
+            // Suspended States
+            case "BASE_SUSPENDED":
+            case "MANUAL_SUSPENSION":
+            case "RULE_SUSPENSION":
+                normalizedState = "suspended";
+                break;
+
+            // Locked States
+            case "BASE_LOCKED":
+            case "SERVER_LOCK":
+            case "USER_LOCK":
+            case "PIN_CHANGE_LOCK":
+                normalizedState = "locked";
+                break;
+
+            // PIN Change States
+            case "ENROLLED_PIN_CHANGE":
+            case "PIN_CHANGE":
+                normalizedState = "pin_change";
+                break;
+
+            // Inactive States (assuming all others not explicitly ACTIVE, LOCKED,
+            // SUSPENDED, or PIN_CHANGE fall into this)
+            case "NOT_INITIALIZED":
+            case "REVOKED":
+            case "BASE_ALLOCATED":
+            case "ALLOCATED":
+            case "ENROLLMENT_PENDING":
+            case "MANUAL_REMOVE":
+            case "AUTO_REMOVE":
+            case "BASE_DELETED":
+            case "BASE_PURGED":
+            case "PURGED_TOKEN":
+                normalizedState = "inactive";
+                break;
+
+            // Failed tokens
+            case "CORRUPTED_INVENTORY":
+            case "CORRUPTED":
+            case "BASE_LOST_FAILED":
+            case "LOST_TOKEN":
+            case "DAMAGED_TOKEN":
+                normalizedState = "failed";
+                break;
+
+            default:
+                logger.log(Level.WARNING, "Unknown state for token: {0}", state);
+                normalizedState = state; // Return the original state if it's not recognized
+                break;
+        }
+
+        return normalizedState;
+
+    }
+
+    // Used to check if the unlock time is in the past. In which case, the token 
+    // is unlock eligible and the unlock time is set to null along with the
+    // state set to unlock_eligible
+    private boolean isTimeInPast(OffsetDateTime time) {
+        return time != null && time.isBefore(OffsetDateTime.now());
+    }
+
+    // unlockable, active, suspended, locked
+    private List<TokenDTO> createTokenDTOs(String userName, String serial, String organization, String type,
+            List<String> options) {
         List<TokenDTO> dtos = new ArrayList<>();
 
         List<String> specialOptions = Arrays.asList("sms", "voice", "email");
+
+        // Get token details
+        TokenDetailsDTO tokenDetails = this.getTokenDetails(serial, organization);
+
+        String state = tokenDetails.getState();
+
+        OffsetDateTime unlockTime = tokenDetails.getUnlockTime();
+
+        if (this.isTimeInPast(unlockTime)) {
+            unlockTime = null;
+            if (state.equals("SERVER_LOCK"))
+                state = "unlock_eligible";
+        }
+        state = normalizeTokenStateValue(state);
+
+        Integer failedAttempts = tokenDetails.getAuthAttempts();
+
+        OffsetDateTime lastAuthDate = tokenDetails.getLastAuthDate();
+        OffsetDateTime lastSuccessDate = tokenDetails.getLastSuccessDate();
+
+
+        // Step 1: Convert to nanoseconds (since the epoch) for precision.
+        long nanosSinceEpoch = lastSuccessDate.toInstant().getEpochSecond() * 1_000_000_000L + lastSuccessDate.getNano();
+        
+        // Step 2: Calculate the target precision for hundredths of a second (10^7 nanoseconds).
+        long targetPrecisionNanos = 10_000_000L; // 10^7 for hundredths of a second
+        
+        // Step 3: Perform rounding up to the nearest hundredth of a second.
+        long remainder = nanosSinceEpoch % targetPrecisionNanos;
+        long roundedNanosSinceEpoch = remainder == 0 ? nanosSinceEpoch : (nanosSinceEpoch - remainder + targetPrecisionNanos);
+        
+        // Step 4: Construct a new OffsetDateTime with the rounded time, ensuring the same offset is preserved.
+        OffsetDateTime roundedLastSuccessDate = OffsetDateTime.ofInstant(
+            java.time.Instant.ofEpochSecond(roundedNanosSinceEpoch / 1_000_000_000L, roundedNanosSinceEpoch % 1_000_000_000L),
+            lastSuccessDate.getOffset()
+        );
+
+        if (lastAuthDate != null && roundedLastSuccessDate != null) {
+            // Adjust lastSuccessDate to have the same timezone as lastAuthDate
+            roundedLastSuccessDate = roundedLastSuccessDate.withOffsetSameInstant(lastAuthDate.getOffset());
+        }
+        
 
         if (Collections.disjoint(options, specialOptions)) {
             TokenDTO tokenDto = new TokenDTO();
             tokenDto.setSerial(serial);
             tokenDto.setType(type);
+            tokenDto.setState(state);
+            tokenDto.setUnlockTime(unlockTime);
+            tokenDto.setFailedAttempts(failedAttempts);
+            tokenDto.setOperatingSystem(tokenDetails.getDeviceName());
+            tokenDto.setLastSuccessDate(roundedLastSuccessDate);
+
+            if(options.contains("push"))
+            {
+                tokenDto.setPushCapable(true);
+            }
+            else if (type.equals("mobilepass"))
+            {
+                tokenDto.setPushCapable(false);
+            }
+
             dtos.add(tokenDto);
             return dtos;
         } else {
+            UserDTO user = this.getUserDetails(userName, organization);
+            String defaultString = "----------";
+
+            String phoneNumber = user != null && user.getMobile() != null ? user.getMobile() : defaultString;
+            String email = user != null && user.getEmail() != null ? user.getEmail() : defaultString;
+
             if (options.contains("sms")) {
                 TokenDTO smsDto = new TokenDTO();
                 smsDto.setSerial(serial);
                 smsDto.setType("sms");
-                // smsDto.setOptions(Arrays.asList("sms"));
-                smsDto.setPhoneNumber("xxxxxxxxxx"); // Ideally, fetch the actual number related to the token
+                smsDto.setPhoneNumber(phoneNumber); // Ideally, fetch the actual number related to the token
+                smsDto.setState(state);
+                smsDto.setUnlockTime(unlockTime);
+                smsDto.setFailedAttempts(failedAttempts);
+                smsDto.setLastSuccessDate(roundedLastSuccessDate);
                 dtos.add(smsDto);
             }
 
@@ -355,7 +471,11 @@ public class SOAPClientService {
                 TokenDTO voiceDto = new TokenDTO();
                 voiceDto.setSerial(serial);
                 voiceDto.setType("voice");
-                voiceDto.setPhoneNumber("xxxxxxxxxx"); // Fetch the phone number for VOICE, same or differently
+                voiceDto.setPhoneNumber(phoneNumber); // Fetch the phone number for VOICE, same or differently
+                voiceDto.setState(state);
+                voiceDto.setUnlockTime(unlockTime);
+                voiceDto.setFailedAttempts(failedAttempts);
+                voiceDto.setLastSuccessDate(roundedLastSuccessDate);
                 dtos.add(voiceDto);
             }
 
@@ -363,8 +483,11 @@ public class SOAPClientService {
                 TokenDTO emailDto = new TokenDTO();
                 emailDto.setSerial(serial);
                 emailDto.setType("email");
-                // emailDto.setOptions(Arrays.asList("email"));
-                emailDto.setEmail("xxxxxxxxxx"); // Fetch the actual email related to the token
+                emailDto.setEmail(email); // Fetch the actual email related to the token
+                emailDto.setState(state);
+                emailDto.setUnlockTime(unlockTime);
+                emailDto.setFailedAttempts(failedAttempts);
+                emailDto.setLastSuccessDate(roundedLastSuccessDate);
                 dtos.add(emailDto);
             }
         }
@@ -372,39 +495,47 @@ public class SOAPClientService {
         return dtos;
     }
 
-    private TokenListDTO mapSerialsToTokenDTOs(List<String> tokenSerials, String userName) {
-        TokenListDTO tokenListDTO = new TokenListDTO();
-        tokenListDTO.setOwner(userName);
+    private TokenListDTO mapSerialsToTokenDTOs(List<String> tokenSerials, String userName, String organization) {
 
+        // Create a list of TokenDTOs for each token serial
         List<TokenDTO> allTokenDTOs = new ArrayList<>();
         for (String serial : tokenSerials) {
-            System.out.println("Serial: " + serial);
             String tokenType = mapSerialToType(serial);
             List<String> options = authenticationOptions.getPresentationOptionsForTokenType(mapSerialToType(serial));
-            allTokenDTOs.addAll(createTokenDTOs(serial, tokenType, options));
+            allTokenDTOs.addAll(createTokenDTOs(userName, serial, organization, tokenType, options));
         }
 
+        // Calculate the various counters for the options list
+        int remainingAttempts = 0; 
+        int maxLockoutAttempts = configService.getUserLockoutPolicy();
+        int overallFailedAttempts = TokenUtils.calculateOverallFailedAttempts(allTokenDTOs);
+
+        // If any token is unlock eligible, reset the overall failed attempts and remaining attempts
+        if (TokenUtils.tokenEligibleForUnlock(allTokenDTOs)) {
+            remainingAttempts = maxLockoutAttempts;
+            overallFailedAttempts = 0;
+        }
+        else
+        {
+            remainingAttempts = maxLockoutAttempts - overallFailedAttempts;
+            remainingAttempts = Math.max(0, remainingAttempts);   // Ensure remainingAttempts is not negative
+        }
+        
+        // Create the options list and add it to the beginning of the token list
+        TokenDTO optionsList = new TokenDTO();
+        optionsList.setType("options");
+        optionsList.setOptions(extractOptionsFromSerials(tokenSerials));    
+        optionsList.setMaxLockoutAttempts(maxLockoutAttempts);
+        optionsList.setOverallFailedAttempts(overallFailedAttempts);
+        optionsList.setRemainingAttempts(remainingAttempts);
+        allTokenDTOs.add(0, optionsList);
+
+        // Create the token list DTO and set the owner and tokens
+        TokenListDTO tokenListDTO = new TokenListDTO();
+        tokenListDTO.setOwner(userName);
         tokenListDTO.setTokens(allTokenDTOs);
         return tokenListDTO;
     }
-
-    // private TokenListDTO mapSerialsToTokenDTOs(List<String> tokenSerials, String
-    // userName) {
-    // TokenListDTO tokenListDTO = new TokenListDTO();
-    // tokenListDTO.setOwner(userName);
-
-    // List<TokenDTO> tokenDTOs = new ArrayList<>();
-    // for (String serial : tokenSerials) {
-    // String tokenType = mapSerialToType(serial);
-    // List<String> options =
-    // authenticationOptions.getPresentationOptionsForTokenType(tokenType);
-    // TokenDTO tokenDTO = createTokenDTO(serial, tokenType, options);
-    // tokenDTOs.add(tokenDTO);
-    // }
-
-    // tokenListDTO.setTokens(tokenDTOs);
-    // return tokenListDTO;
-    // }
 
     private List<String> mapSerialsToTypes(List<String> tokenSerials) {
         List<String> tokenTypes = new ArrayList<>();
@@ -417,5 +548,41 @@ public class SOAPClientService {
 
     private String mapSerialToType(String serial) {
         return tokenDataService.getTokenType(serial);
+    }
+
+    public TokenDetailsDTO getTokenDetails(String serial, String organization) {
+        try {
+            SOAPMessage request = GetTokenSoapRequest.createGetTokenRequest(serial, organization);
+            CloseableHttpResponse response = this.sendSOAPRequest(request);
+
+            // Handle the SOAP response, maybe extract tokens from it or handle errors.
+            return processSOAPResponseForTokenDetails(response);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching token details", e);
+        }
+    }
+
+    private TokenDetailsDTO processSOAPResponseForTokenDetails(CloseableHttpResponse response) throws Exception {
+        String responseBody = EntityUtils.toString(response.getEntity());
+        return TokenDetailsParser.extractTokenDetailsFromResponseBody(responseBody);
+    }
+
+    public UserDTO getUserDetails(String userName, String organization) {
+        try {
+            SOAPMessage request = GetUserSoapRequest.createGetUserRequest(userName, organization);
+            CloseableHttpResponse response = this.sendSOAPRequest(request);
+
+            // Handle the SOAP response, maybe extract tokens from it or handle errors.
+            return processSOAPResponseForUserDetails(response);
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error fetching user details", e);
+        }
+    }
+
+    private UserDTO processSOAPResponseForUserDetails(CloseableHttpResponse response) throws Exception {
+        String responseBody = EntityUtils.toString(response.getEntity());
+        return UserResponseParser.extractUserDetailsFromResponse(responseBody);
     }
 }

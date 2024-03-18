@@ -55,6 +55,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -266,19 +267,22 @@ public class CustomAuthenticate {
         ClientHttpResponse response = execution.execute(request, body);
         if (response.getStatusCode() == HttpStatus.TEMPORARY_REDIRECT) {
             URI location = response.getHeaders().getLocation();
-            if (!location.isAbsolute()) {
+            if (location != null && !location.isAbsolute()) {
                 try {
                     URI requestUri = request.getURI();
                     location = new URI(requestUri.getScheme(), requestUri.getAuthority(), location.getPath(),
                             location.getQuery(), location.getFragment());
+                    
+                    Log.log(Level.FINE, "Following Redirect URL: {0}", location);
+                    return restTemplateWithRedirect().execute(location, HttpMethod.POST,
+                            req -> req.getHeaders().putAll(request.getHeaders()), clientHttpResponse -> clientHttpResponse);
+
                 } catch (URISyntaxException e) {
-                    Log.log(Level.SEVERE, "Failed to construct the absolute redirect URL", e);
-                    throw new IOException("Failed to construct the absolute redirect URL", e);
+                    String errorMsg = String.format("Failed to construct the absolute redirect URL. Request URI: %s. Error: %s", request.getURI(), e.getMessage());
+                    Log.log(Level.SEVERE, errorMsg);
+                    throw new IOException(errorMsg);
                 }
             }
-            Log.fine("Following Redirect URL: " + location);
-            return restTemplateWithRedirect().execute(location, HttpMethod.POST,
-                    req -> req.getHeaders().putAll(request.getHeaders()), clientHttpResponse -> clientHttpResponse);
         }
         return response;
     }
@@ -294,7 +298,7 @@ public class CustomAuthenticate {
     private ResponseErrorHandler noRedirectErrorHandler() {
         return new DefaultResponseErrorHandler() {
             @Override
-            public void handleError(ClientHttpResponse response) throws IOException {
+            public void handleError(@NonNull ClientHttpResponse response) throws IOException {
                 if (response.getStatusCode() != HttpStatus.TEMPORARY_REDIRECT) {
                     super.handleError(response);
                 }
@@ -317,11 +321,11 @@ public class CustomAuthenticate {
         requestFactory.setConnectTimeout(CONNECT_TIMEOUT); // set connection timeout to 10 seconds
         requestFactory.setReadTimeout(READ_TIMEOUT); // set read timeout to 60 seconds
         RestTemplate restTemplate = new RestTemplate(requestFactory);
-        restTemplate.getInterceptors().add((request, body, execution) -> handleRedirect(request, body, execution));
+        restTemplate.getInterceptors().add(this::handleRedirect); // Replaced lambda with method reference
         restTemplate.setErrorHandler(noRedirectErrorHandler());
         return restTemplate;
     }
-
+    
 
     /**
      * Sends a POST request to the specified authentication ID URL using a custom `RestTemplate` object, which includes
@@ -349,7 +353,7 @@ public class CustomAuthenticate {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Log.fine("Push OTP Auth ID URL: " + authIdUrl);
+        Log.log(Level.FINE, "Push OTP Auth ID URL: {0}", authIdUrl);
 
         ResponseEntity<String> response = null;
 
@@ -467,7 +471,7 @@ public class CustomAuthenticate {
              * empty, return null.
              */
             if (!json.get("status").asText().isEmpty()) {
-                Log.fine("Received STATUS in parking server response:\n" + json);
+                Log.log(Level.FINE, "Received STATUS in parking server response:\n{0}", json);
                 return json.get("status").asText();
             } else {
                 Log.fine("Have received NO STATUS in parking server response");
@@ -502,6 +506,7 @@ public class CustomAuthenticate {
         TokenValidatorRequestBuilder builder = new TokenValidatorRequestBuilder();
         builder.username(username);
         builder.password(PUSH_TRIGGER_CHAR);
+        builder.userIpAddress(userIp);
         builder.pushOtpAuthId(authId);
         builder.pushOtpSpsStatus(authStatus);
         builder.tvRequestType(TVRequestType.verifycredentials);
@@ -526,7 +531,7 @@ public class CustomAuthenticate {
                 .equals(responseDTO.getReturnValue());
 
         // Log the authentication result
-        Log.fine("-> Push authentication successful? " + authSuccess);
+        Log.log(Level.FINE, "-> Push authentication successful? {0}", authSuccess);
 
         return authSuccess;
     }

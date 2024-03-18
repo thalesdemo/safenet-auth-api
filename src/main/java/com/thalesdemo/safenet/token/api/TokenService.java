@@ -16,7 +16,6 @@ import javax.xml.soap.SOAPMessage;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -35,20 +34,23 @@ public class TokenService {
     @Value("${safenet.bsidca.connection-page-size:100}")
     private int pageSize;
 
-    @Autowired
     private SOAPClientService soapClientService;
 
-    @Autowired
     private ConfigService configService;
 
     private static final Logger logger = Logger.getLogger(TokenService.class.getName());
 
-    @Autowired
-    private AuthenticationOptions authenticationOptions;
+    // @Autowired
+    // private AuthenticationOptions authenticationOptions;
 
     // public String getPresentationTypeForTokenType(String tokenType) {
     // return authenticationOptions.getPresentationType(tokenType);
     // }
+
+    public TokenService(SOAPClientService soapClientService, ConfigService configService) {
+        this.soapClientService = soapClientService;
+        this.configService = configService;
+    }
 
     public List<TokenDataDTO> getTokens(String state, String type, String serial, String container, String organization,
             int startRecord, int pageSize) {
@@ -92,41 +94,16 @@ public class TokenService {
         String responseBody = EntityUtils.toString(response.getEntity());
         return extractTokensFromResponseBody(responseBody);
     }
-    // private List<TokenDataDTO> processSOAPResponse(CloseableHttpResponse
-    // response) {
-    // List<TokenDataDTO> extractedTokens = null;
-
-    // try {
-    // // Log headers
-    // Header[] headers = response.getAllHeaders();
-    // for (Header header : headers) {
-    // logger.info(String.format("Header: %s - %s", header.getName(),
-    // header.getValue()));
-    // }
-
-    // // Log body
-    // String responseBody = EntityUtils.toString(response.getEntity());
-    // logger.info(String.format("Response Body: %s", responseBody));
-
-    // extractedTokens = extractTokensFromResponseBody(responseBody);
-
-    // if (extractedTokens != null && !extractedTokens.isEmpty()) {
-    // TokenStorage.storeTokens(extractedTokens, storagePath);
-    // }
-
-    // } catch (IOException e) {
-    // logger.severe("Error processing SOAP response: " + e.getMessage());
-    // }
-
-    // return extractedTokens;
-    // }
 
     private List<TokenDataDTO> extractTokensFromResponseBody(String xmlResponse) {
         List<TokenDataDTO> tokensList = new ArrayList<>();
-        // ObjectMapper mapper = new ObjectMapper();
 
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8)));
 
@@ -138,21 +115,7 @@ public class TokenService {
                 TokenDataDTO tokenData = new TokenDataDTO();
 
                 tokenData.setSerialNumber(element.getElementsByTagName("serialnumber").item(0).getTextContent().trim());
-                // tokenData.setState(element.getElementsByTagName("state").item(0).getTextContent().trim());
-                // tokenData.setStateSetDate(element.getElementsByTagName("stateSetDate").item(0).getTextContent().trim());
-                // tokenData.setOrgName(element.getElementsByTagName("orgName").item(0).getTextContent().trim());
                 tokenData.setType(element.getElementsByTagName("type").item(0).getTextContent().trim());
-                // tokenData.setContainer(element.getElementsByTagName("container").item(0).getTextContent().trim());
-                // tokenData.setRented(element.getElementsByTagName("rented").item(0).getTextContent().trim());
-                // tokenData.setHardwareInit(Boolean
-                // .parseBoolean(element.getElementsByTagName("hardwareInit").item(0).getTextContent().trim()));
-                // tokenData.setAssignable(Boolean
-                // .parseBoolean(element.getElementsByTagName("assignable").item(0).getTextContent().trim()));
-                // tokenData.setIce(element.getElementsByTagName("ice").item(0).getTextContent().trim());
-                // tokenData.setStateInt(
-                // Integer.parseInt(element.getElementsByTagName("stateInt").item(0).getTextContent().trim()));
-                // tokenData.setTokenAllowed(
-                // Integer.parseInt(element.getElementsByTagName("tokenAllowed").item(0).getTextContent().trim()));
 
                 tokensList.add(tokenData);
 
@@ -198,6 +161,10 @@ public class TokenService {
         GetTotalTokensResponseDTO responseDto = new GetTotalTokensResponseDTO();
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8)));
 
@@ -214,8 +181,6 @@ public class TokenService {
         return responseDto;
     }
 
-    // TODO: Default to application.yaml for organization if not supplied, similar
-    // to getOptionsListByOwner
     public TokenListDTO getTokensByOwner(String userName, Optional<String> organization, int timeout) throws Exception {
         String org = organization.orElseGet(() -> {
             try {
@@ -226,7 +191,7 @@ public class TokenService {
                 throw new RuntimeException("Failed to retrieve default organization", e);
             }
         });
-        
+
         return soapClientService.getTokensByOwner(userName, org, timeout);
     }
 
