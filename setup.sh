@@ -92,17 +92,12 @@ download_to_dir() {
 }
 
 # Function to prompt the user for input
-# Prefix for simulating associative array with environment variables
-user_inputs_prefix="user_input_"
-
 prompt_user() {
     local prompt_message=$1
     local default_key=$2
     local input_value
-    local variable_name="${user_inputs_prefix}${default_key}"
 
     # Check if a previous value exists
-    eval "input_value=\${$variable_name}"
     if [[ -n ${default_key} && -n $input_value ]]; then
         echo "$input_value"
         return
@@ -119,11 +114,6 @@ prompt_user() {
     if [[ -z "$input_value" ]]; then
         echo "\"\""
         return
-    fi
-
-    # Store the user input value directly in an environment variable
-    if [[ -n $input_value ]]; then
-        eval "${variable_name}='$input_value'"
     fi
 
     echo "$input_value"
