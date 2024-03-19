@@ -9,7 +9,7 @@ import com.thalesdemo.safenet.token.api.dto.TokenDataDTO;
 
 public class TokenStorage {
 
-    private static final String DEFAULT_STORAGE_PATH = "tokens.json";
+    private static final String DEFAULT_STORAGE_PATH = "tokens.enc.json";
 
     private TokenStorage() {
         // Private constructor to prevent instantiation
