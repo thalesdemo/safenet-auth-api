@@ -13,7 +13,7 @@ LATEST_VERSION_API="0.1.0"
 ensure_dir_exists() {
     local dir_name=$1
     if [[ ! -d "$dir_name" ]]; then
-        mkdir -p "$dir_name"
+        sudo mkdir -p "$dir_name"
     fi
 }
 
@@ -85,8 +85,8 @@ download_to_dir() {
             return
         fi
     fi
-
-    curl -o "$destination" "$file_path"
+    echo "Downloading $file_path to $destination..."
+    curl -L -o "$destination" "$file_path"
 }
 
 # Function to prompt the user for input
@@ -303,13 +303,20 @@ replace_marker "$install_dir/config/application.yaml" "<safenet_encrypted_operat
 replace_marker "$install_dir/config/application.yaml" "<safenet_encrypted_operator_password>" "$encrypted_password"
 replace_marker "$install_dir/config/application.yaml" "<encrypted-key-store-password>" "$encrypted_keystore_password"
 
+# Prompt user for the maximum number of failed attempts before the account is locked
+max_failed_attempts=$(prompt_user "Enter the maximum number of failed attempts before the account is locked" "3")
+
+# Replace max failed attempts marker in application.yaml
+replace_marker "$install_dir/config/application.yaml" "<safenet-user-max-failed-attempts>" $max_failed_attempts
+
+
 # Export the encryption key for the current session and instruct the user to do so for future sessions
 echo
 echo "1. For the gateway to function, ensure you set the environment variable for the encryption key:"
 echo "export ENCRYPTION_SECRET_KEY=$encryption_key"
 echo
 echo Or run for example java with:
-echo sudo -u root -E ENCRYPTION_SECRET_KEY=$encryption_key java -jar safenet-auth-api.jar
+echo sudo -u root -E ENCRYPTION_SECRET_KEY=$encryption_key java -jar $install_dir/safenet-auth-api.jar
 echo
 
 # Print apiKey to the screen
