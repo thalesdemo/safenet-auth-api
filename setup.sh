@@ -45,7 +45,6 @@ check_java_version() {
 }
 
 # Function to prompt the user to install Java 17
-# Function to prompt the user to install Java 17
 prompt_install_java() {
     local java_version="17"
     local java_package_linux="openjdk-17-jdk" # Default package name for most Linux distros
@@ -107,7 +106,7 @@ prompt_user() {
     local default_key=$2
     local input_value
 
-    echo "" # This adds a new line for better readability
+    # echo "" # This adds a new line for better readability
     read -p "$prompt_message (Default: $default_key): " input_value
 
     # If input is empty, use the default key as the value
