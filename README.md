@@ -70,7 +70,7 @@ Then, follow the instructions that appear on the screen to get your unique clien
 
 To view the API documentation and all available endpoints, open your web browser and go to `http://localhost:8888`.
 
-![example.gif](https://github.com/thalesdemo/safenet-auth-api/blob/main/art/example.gif)
+![example.gif](https://github.com/thalesdemo/safenet-auth-api/blob/main/img/example.gif)
 
 <h2>Contact Us</h2>
 If you have any feedback to share or would like to request new features, please feel free to reach out to us at <a href="mailto:hello@onewelco.me">hello@onewelco.me</a>. We welcome your input!

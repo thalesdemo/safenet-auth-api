@@ -1,0 +1,9 @@
+/* Hide the servers dropdown */
+.swagger-ui .servers {
+    display: none !important;
+}
+
+/* Hide the explore bar */
+.swagger-ui .topbar {
+    display: none !important;
+}
