@@ -125,7 +125,13 @@ replace_marker() {
     local marker=$2
     local replacement_value=$3
 
-    sed -i "s|$marker|$replacement_value|g" "$file"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        # macOS, use BSD sed
+        sed -i '' "s|$marker|$replacement_value|g" "$file"
+    else
+        # Assume Linux, use GNU sed
+        sed -i "s|$marker|$replacement_value|g" "$file"
+    fi
 }
 
 # Start the main script
@@ -258,8 +264,8 @@ replace_marker "$install_dir/config/application.yaml" "<key-alias>" "$key_alias"
 keygen_output=$(java -jar $install_dir/keygen-1.0.jar)
 
 # Extract apiKey and apiKeyHash from the output
-apiKey=$(echo "$keygen_output" | grep -oP '"apiKey":"\K[^"]+')
-apiKeyHash=$(echo "$keygen_output" | grep -oP '"apiKeyHash":"\K[^"]+')
+apiKey=$(echo "$keygen_output" | awk -F'"' '/"apiKey":/{print $(NF-1)}')
+apiKeyHash=$(echo "$keygen_output" | awk -F'"' '/"apiKeyHash":/{print $(NF-1)}')
 
 # Replace the marker in linux.ini with the apiKeyHash
 replace_marker "$install_dir/config/application.yaml" "<safenet-api-key-hash>" "$apiKeyHash"
