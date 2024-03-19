@@ -80,6 +80,7 @@ public class SOAPClientService {
             configService.clearSensitiveData(decryptedPassword);
 
             configuration.setCookies(cookies);
+
             return "Connected with cookies: " + cookies + "\n";
 
         } catch (ApiException ae) {
@@ -114,6 +115,7 @@ public class SOAPClientService {
         // "Set-Cookie" headers
         if (statusCode == 200) {
             if (responseBody.contains("AUTH_SUCCESS")) {
+
                 return extractCookiesFromResponse(response);
             } else if (responseBody.contains("AUTH_FAILURE")) {
                 throw new ApiException("Authentication failed");
@@ -183,22 +185,42 @@ public class SOAPClientService {
                         timeout);
             }
 
-            // Check the HTTP status code. A status code in the 200s indicates success.
+            // Check the HTTP status code
             int statusCode = response.getStatusLine().getStatusCode();
-            return (statusCode >= 200 && statusCode < 300);
+            if (statusCode >= 200 && statusCode < 300) {
+                // Parse the XML content from the response entity
+                String responseContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+                factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+                factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+                factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+                DocumentBuilder builder = factory.newDocumentBuilder();
+                InputSource is = new InputSource(new StringReader(responseContent));
+                Document doc = builder.parse(is);
 
-        } catch (Exception ex) {
-            return false;
-        } finally {
-            // Close the response to free up resources.
-            if (response != null) {
-                try {
+                // Extract the boolean value from the XML
+                String booleanValue = doc.getDocumentElement().getTextContent();
+
+                // Close the response
+                response.close();
+
+                // Return true only if the extracted boolean value is "true"
+                return "true".equalsIgnoreCase(booleanValue);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // In case of any exception, ensure the response is closed
+            try {
+                if (response != null)
                     response.close();
-                } catch (IOException e) {
-                    // Handle the exception or log it.
-                }
+            } catch (Exception closeException) {
+                closeException.printStackTrace();
             }
         }
+        return false;
+
     }
 
     private List<String> extractCookiesFromResponse(HttpResponse response) {
@@ -211,9 +233,6 @@ public class SOAPClientService {
                 cookies.add(cookieValue);
             }
         }
-
-        // Log the extracted cookies to your logger
-        logger.log(Level.FINEST, "Extracted Cookies from Response: {0}", cookies);
 
         return cookies;
     }
@@ -371,7 +390,7 @@ public class SOAPClientService {
 
     }
 
-    // Used to check if the unlock time is in the past. In which case, the token 
+    // Used to check if the unlock time is in the past. In which case, the token
     // is unlock eligible and the unlock time is set to null along with the
     // state set to unlock_eligible
     private boolean isTimeInPast(OffsetDateTime time) {
@@ -404,28 +423,30 @@ public class SOAPClientService {
         OffsetDateTime lastAuthDate = tokenDetails.getLastAuthDate();
         OffsetDateTime lastSuccessDate = tokenDetails.getLastSuccessDate();
 
-
         // Step 1: Convert to nanoseconds (since the epoch) for precision.
-        long nanosSinceEpoch = lastSuccessDate.toInstant().getEpochSecond() * 1_000_000_000L + lastSuccessDate.getNano();
-        
-        // Step 2: Calculate the target precision for hundredths of a second (10^7 nanoseconds).
+        long nanosSinceEpoch = lastSuccessDate.toInstant().getEpochSecond() * 1_000_000_000L
+                + lastSuccessDate.getNano();
+
+        // Step 2: Calculate the target precision for hundredths of a second (10^7
+        // nanoseconds).
         long targetPrecisionNanos = 10_000_000L; // 10^7 for hundredths of a second
-        
+
         // Step 3: Perform rounding up to the nearest hundredth of a second.
         long remainder = nanosSinceEpoch % targetPrecisionNanos;
-        long roundedNanosSinceEpoch = remainder == 0 ? nanosSinceEpoch : (nanosSinceEpoch - remainder + targetPrecisionNanos);
-        
-        // Step 4: Construct a new OffsetDateTime with the rounded time, ensuring the same offset is preserved.
+        long roundedNanosSinceEpoch = remainder == 0 ? nanosSinceEpoch
+                : (nanosSinceEpoch - remainder + targetPrecisionNanos);
+
+        // Step 4: Construct a new OffsetDateTime with the rounded time, ensuring the
+        // same offset is preserved.
         OffsetDateTime roundedLastSuccessDate = OffsetDateTime.ofInstant(
-            java.time.Instant.ofEpochSecond(roundedNanosSinceEpoch / 1_000_000_000L, roundedNanosSinceEpoch % 1_000_000_000L),
-            lastSuccessDate.getOffset()
-        );
+                java.time.Instant.ofEpochSecond(roundedNanosSinceEpoch / 1_000_000_000L,
+                        roundedNanosSinceEpoch % 1_000_000_000L),
+                lastSuccessDate.getOffset());
 
         if (lastAuthDate != null && roundedLastSuccessDate != null) {
             // Adjust lastSuccessDate to have the same timezone as lastAuthDate
             roundedLastSuccessDate = roundedLastSuccessDate.withOffsetSameInstant(lastAuthDate.getOffset());
         }
-        
 
         if (Collections.disjoint(options, specialOptions)) {
             TokenDTO tokenDto = new TokenDTO();
@@ -437,12 +458,9 @@ public class SOAPClientService {
             tokenDto.setOperatingSystem(tokenDetails.getDeviceName());
             tokenDto.setLastSuccessDate(roundedLastSuccessDate);
 
-            if(options.contains("push"))
-            {
+            if (options.contains("push")) {
                 tokenDto.setPushCapable(true);
-            }
-            else if (type.equals("mobilepass"))
-            {
+            } else if (type.equals("mobilepass")) {
                 tokenDto.setPushCapable(false);
             }
 
@@ -506,25 +524,24 @@ public class SOAPClientService {
         }
 
         // Calculate the various counters for the options list
-        int remainingAttempts = 0; 
+        int remainingAttempts = 0;
         int maxLockoutAttempts = configService.getUserLockoutPolicy();
         int overallFailedAttempts = TokenUtils.calculateOverallFailedAttempts(allTokenDTOs);
 
-        // If any token is unlock eligible, reset the overall failed attempts and remaining attempts
+        // If any token is unlock eligible, reset the overall failed attempts and
+        // remaining attempts
         if (TokenUtils.tokenEligibleForUnlock(allTokenDTOs)) {
             remainingAttempts = maxLockoutAttempts;
             overallFailedAttempts = 0;
-        }
-        else
-        {
+        } else {
             remainingAttempts = maxLockoutAttempts - overallFailedAttempts;
-            remainingAttempts = Math.max(0, remainingAttempts);   // Ensure remainingAttempts is not negative
+            remainingAttempts = Math.max(0, remainingAttempts); // Ensure remainingAttempts is not negative
         }
-        
+
         // Create the options list and add it to the beginning of the token list
         TokenDTO optionsList = new TokenDTO();
         optionsList.setType("options");
-        optionsList.setOptions(extractOptionsFromSerials(tokenSerials));    
+        optionsList.setOptions(extractOptionsFromSerials(tokenSerials));
         optionsList.setMaxLockoutAttempts(maxLockoutAttempts);
         optionsList.setOverallFailedAttempts(overallFailedAttempts);
         optionsList.setRemainingAttempts(remainingAttempts);

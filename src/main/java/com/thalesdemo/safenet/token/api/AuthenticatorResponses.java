@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -34,6 +35,19 @@ public class AuthenticatorResponses {
                 throws IOException {
             gen.writeString(value.name().toLowerCase());
         }
+    }
+
+    /**
+     * Converts a list of AuthenticationOption enums to a list of their string
+     * representations.
+     *
+     * @param optionsList the list of AuthenticationOption enums.
+     * @return a List<String> containing the string representations of the enums.
+     */
+    public static List<String> convertOptionsToStringList(List<AuthenticationOption> optionsList) {
+        return optionsList.stream()
+                .map(AuthenticationOption::toString) // Utilizes the overridden toString method
+                .collect(Collectors.toList());
     }
 
     @Data

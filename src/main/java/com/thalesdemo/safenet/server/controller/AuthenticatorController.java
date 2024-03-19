@@ -1,5 +1,6 @@
 package com.thalesdemo.safenet.server.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -24,7 +25,9 @@ import com.thalesdemo.safenet.token.api.TokenService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -55,16 +58,69 @@ public class AuthenticatorController {
      */
 
     private static final Logger logger = Logger.getLogger(AuthenticatorController.class.getName());
+
     public AuthenticatorController(TokenService tokenService, PingService bsidcaPingService, Environment env) {
         this.tokenService = tokenService;
         this.bsidcaPingService = bsidcaPingService;
         this.env = env;
     }
 
+    private static final String tokenListExample = """
+            [
+               {
+                 "type": "options",
+                 "options": [
+                   "sms",
+                   "email",
+                   "voice",
+                   "grid",
+                   "push",
+                   "code"
+                 ],
+                 "remaining_attempts": 2,
+                 "num_total_failures": 1,
+                 "max_attempt_policy": 3
+               },
+               {
+                   "type": "email",
+                   "email_address": "hello@onewelco.me",
+                   "serial_number": "1000000000",
+                   "last_auth_success": "2024-03-02T00:00:01.00-07:00",
+                   "failed_attempts": 1,
+                   "state": "active"
+               },
+               {
+                   "type": "mobilepass",
+                   "serial_number": "1000000001",
+                   "operating_system": "macOS",
+                   "push_otp_capable": true,
+                   "last_auth_success": "2024-03-01T19:00:00.00-07:00",
+                   "failed_attempts": 0,
+                   "state": "suspended"
+               },
+               {
+                 "type": "sms",
+                 "phone_number": "+1-111-222-3333",
+                 "serial_number": "1000000000",
+                 "last_auth_success": "2024-03-02T00:00:01.00-07:00",
+                 "failed_attempts": 1,
+                 "state": "active"
+               },
+               {
+                 "type": "voice",
+                 "phone_number": "+1-111-222-3333",
+                 "serial_number": "1000000000",
+                 "last_auth_success": "2024-03-02T00:00:01.00-07:00",
+                 "failed_attempts": 1,
+                 "state": "active"
+               }
+            ]
+            """;
+
     @Operation(summary = "Retrieve authentication options by user", description = "Fetch available authentication options for a specific user. Can optionally filter by organization.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved options", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthenticatorResponses.OptionsResponse.class, defaultValue = "{\"options\": [\"push\", \"grid\", \"email\"]}"))),
-            @ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to incomplete or malformed data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved options", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TokenDTO.class)), examples = @ExampleObject(description = "Success", value = tokenListExample))),
+            @ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to incomplete or malformed data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.FALSE))),
             @ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
             @ApiResponse(responseCode = "500", description = "An unexpected error occurred while fetching the user's token options.", content = @Content),
             @ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
@@ -77,7 +133,7 @@ public class AuthenticatorController {
     // \"errorCode\": \"INTERNAL_SERVER_ERROR\"}")))
 
     @GetMapping("/{username}/list-options")
-    public ResponseEntity<Object> getOptionsByOwner(
+    public ResponseEntity<?> getOptionsByOwner(
             @Parameter(description = "The unique identifier of the user.", required = true) @PathVariable String username,
 
             @Parameter(description = "(**Optional**) The organization for which to retrieve authentication options.") @RequestParam(required = false) Optional<String> organization,
@@ -112,7 +168,11 @@ public class AuthenticatorController {
             if (compactResponse) {
                 List<AuthenticatorResponses.AuthenticationOption> optionsList = tokenService
                         .getOptionsListByOwner(username, organization, 10000);
-                return ResponseEntity.ok(new AuthenticatorResponses.OptionsResponse(optionsList));
+                List<TokenDTO> tokens = new ArrayList<>();
+                TokenDTO token = new TokenDTO();
+                token.setOptions(AuthenticatorResponses.convertOptionsToStringList(optionsList));
+                tokens.add(token);
+                return ResponseEntity.ok(tokens);
             } else {
                 TokenListDTO tokenList = tokenService.getTokensByOwner(username, organization, 10000);
                 List<TokenDTO> tokens = tokenList.getTokens();

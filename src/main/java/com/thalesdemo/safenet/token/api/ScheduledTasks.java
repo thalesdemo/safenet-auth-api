@@ -48,14 +48,21 @@ public class ScheduledTasks {
         // This method will be called after bean construction and pingConnection
         logger.info("Initialization logic in @PostConstruct. Connecting to BSIDCA...");
         clientService.connect();
-        connectionKeepAlive();
+        boolean connectionStatus = connectionKeepAlive();
+        if (!connectionStatus) {
+            logger.log(Level.SEVERE, "Failed to connect to BSIDCA during initialization. Using cached data (if any).");
+        }
 
         // Check if storageFile exists
         File storage = new File(configService.getTokenStorageFile());
 
         if (!storage.exists() || storage.isDirectory()) {
-            logger.info("Storage file doesn't exist. Fetching inventory...");
-            getInventory();
+            if(connectionStatus) {
+                logger.info("Storage file doesn't exist. Fetching inventory...");
+                getInventory();
+            } else {
+                logger.severe("Storage file doesn't exist, and connection to BSIDCA is down. Result -> No cache available: the endpoint `/list-options` will not function correctly!");
+            }
         } else {
             logger.info("Storage file already exists. Skipping inventory fetch in startup initialization.");
 
@@ -77,7 +84,7 @@ public class ScheduledTasks {
     }
 
     @Scheduled(fixedRateString = "#{${safenet.bsidca.scheduling.ping-interval} * 1000}", initialDelayString = "#{${safenet.bsidca.scheduling.ping-interval} * 1000}")
-    public void connectionKeepAlive() {
+    public boolean connectionKeepAlive() {
         try {
             for (int i = 0; i < pingRetries; i++) {
                 boolean resultPing = clientService.pingConnection(pingTimeoutInSeconds,
@@ -88,15 +95,19 @@ public class ScheduledTasks {
 
                 if (resultPing) {
                     // Ping successful
-                    break;
+                    return true;
                 } else {
                     logger.log(Level.WARNING, "Ping failed on attempt {0}. Trying to reconnect...", i + 1);
                     clientService.connect();
                 }
             }
+            throw new Exception("Failed to ping after " + pingRetries + " retries.");
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error during connection keep-alive process.", e);
+            // Consider re-throwing or handling the exception further as per your use-case
+
         }
+        return false;
     }
 
     @Scheduled(cron = "${safenet.bsidca.scheduling.cron-inventory}")
