@@ -13,7 +13,7 @@ LATEST_VERSION_API="0.1.0"
 ensure_dir_exists() {
     local dir_name=$1
     if [[ ! -d "$dir_name" ]]; then
-        sudo mkdir -p "$dir_name"
+        mkdir -p "$dir_name"
     fi
 }
 
