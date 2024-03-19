@@ -137,7 +137,7 @@ public class HealthController {
 					@ExampleObject(name = "Operational", description = "Example of the service being in an healthy state and Bsidca server is reachable", value = "{\"health\":\"ok\",\"token_validator\":true,\"bsidca_soap_api\":true}"),
 					@ExampleObject(name = "Malfunctioning", description = "Example of the service being in an unhealthy state or Bsidca server is not reachable", value = "{\"health\":\"error\",\"token_validator\":false,\"bsidca_soap_api\":false}")
 			})),
-			@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.TRUE))),
+			@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.FALSE))),
 			@ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
 			@ApiResponse(responseCode = "500", description = "An unexpected error occurred while retrieving the health of the service.", content = @Content)
 	})

@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.thalesdemo.safenet.auth.api.Authenticate;
 import com.thalesdemo.safenet.auth.api.CustomAuthenticate;
 import com.thalesdemo.safenet.auth.commons.AuthenticationRequest;
@@ -166,7 +167,7 @@ public class AuthenticateController {
 			})
 	})
 	@ApiResponse(responseCode = "401", content = @Content, description = "You have not authenticated to the API using the header X-API-Key.")
-	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "object", additionalProperties = AdditionalPropertiesValue.TRUE)))
+	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "null", additionalProperties = AdditionalPropertiesValue.FALSE))) //AdditionalPropertiesValue.FALSE)))
 	@ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
 
 	@JsonView(ResponseCodeViews.Standard.class)
