@@ -3,8 +3,8 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
-# Associative array to store user input values
-declare -A user_inputs
+# Initialize a prefix for our pseudo-associative array variables
+user_inputs_prefix="user_input_"
 
 # Set the latest version of the SafeNet Auth API
 LATEST_VERSION_API="0.1.0"
@@ -92,29 +92,32 @@ download_to_dir() {
 # Function to prompt the user for input
 prompt_user() {
     local prompt_message=$1
-    local default_value=$2
+    local default_key=$2
+    local input_value
+    local variable_name="${user_inputs_prefix}${default_key}"
 
     # Check if a previous value exists
-    if [[ -n $default_value ]] && [[ -n "${user_inputs[$default_value]}" ]]; then
-        echo "${user_inputs[$default_value]}"
+    if [[ -n ${default_key} && -n ${!variable_name+x} ]]; then
+        echo "${!variable_name}"
         return
     fi
 
-    read -p "$prompt_message (Default: $default_value): " input_value
+    read -p "$prompt_message (Default: $default_key): " input_value
 
-    # If input is empty, use the default value
-    if [[ -z "$input_value" ]]; then
-        input_value=$default_value
+    # If input is empty, use the default key as the value
+    if [[ -z "$input_value" && -n "$default_key" ]]; then
+        input_value=$default_key
     fi
 
+    # If input is still empty after trying to use the default, return an empty string
     if [[ -z "$input_value" ]]; then
         echo "\"\""
         return
     fi
 
-    # Store the user input value if it's not empty
-    if [[ -n $input_value && -n $default_value ]]; then
-        user_inputs["$default_value"]=$input_value
+    # Store the user input value using a dynamically named variable
+    if [[ -n $input_value ]]; then
+        declare -g "${variable_name}"="$input_value"
     fi
 
     echo "$input_value"
