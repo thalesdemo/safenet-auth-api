@@ -1,13 +1,13 @@
 #!/bin/bash
 
+# Set the latest version of the SafeNet Auth API
+LATEST_VERSION_API="0.1.0"
+
 # Exit immediately if a command exits with a non-zero status
 set -e
 
 # Initialize a prefix for our pseudo-associative array variables
 user_inputs_prefix="user_input_"
-
-# Set the latest version of the SafeNet Auth API
-LATEST_VERSION_API="0.1.0"
 
 # Function to ensure a directory exists
 ensure_dir_exists() {
@@ -90,6 +90,9 @@ download_to_dir() {
 }
 
 # Function to prompt the user for input
+# Prefix for simulating associative array with environment variables
+user_inputs_prefix="user_input_"
+
 prompt_user() {
     local prompt_message=$1
     local default_key=$2
@@ -97,8 +100,9 @@ prompt_user() {
     local variable_name="${user_inputs_prefix}${default_key}"
 
     # Check if a previous value exists
-    if [[ -n ${default_key} && -n ${!variable_name+x} ]]; then
-        echo "${!variable_name}"
+    eval "input_value=\${$variable_name}"
+    if [[ -n ${default_key} && -n $input_value ]]; then
+        echo "$input_value"
         return
     fi
 
@@ -115,13 +119,14 @@ prompt_user() {
         return
     fi
 
-    # Store the user input value using a dynamically named variable
+    # Store the user input value directly in an environment variable
     if [[ -n $input_value ]]; then
-        declare -g "${variable_name}"="$input_value"
+        eval "${variable_name}='$input_value'"
     fi
 
     echo "$input_value"
 }
+
 
 # Function to replace markers in files
 replace_marker() {
