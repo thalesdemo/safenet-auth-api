@@ -18,7 +18,8 @@ You can download and run the setup script using `curl`:
 
 
 ```bash
-curl -L https://github.com/thalesdemo/safenet-auth-api/releases/download/0.1.0/setup.sh -o setup.sh && bash setup.sh
+curl -L https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/setup.sh -o setup.sh && \
+bash setup.sh
 ```
 > **NOTE**: Please ensure you have the necessary permissions to execute the script in your environment.
 
