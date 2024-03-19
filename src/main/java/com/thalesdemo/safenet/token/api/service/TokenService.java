@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.service;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -22,8 +22,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.thalesdemo.safenet.token.api.requests.GetTokensSoapRequest;
-import com.thalesdemo.safenet.token.api.requests.GetTotalTokensSoapRequest;
+import com.thalesdemo.safenet.token.api.AuthenticatorResponses;
+import com.thalesdemo.safenet.token.api.dto.GetTotalTokensResponseDTO;
+import com.thalesdemo.safenet.token.api.dto.TokenDTO;
+import com.thalesdemo.safenet.token.api.dto.TokenDataDTO;
+import com.thalesdemo.safenet.token.api.request.GetTokensSoapRequest;
+import com.thalesdemo.safenet.token.api.request.GetTotalTokensSoapRequest;
+import com.thalesdemo.safenet.token.api.util.TokenStorage;
 
 @Service
 public class TokenService {
@@ -181,7 +186,8 @@ public class TokenService {
         return responseDto;
     }
 
-    public TokenListDTO getTokensByOwner(String userName, Optional<String> organization, int timeout) throws Exception {
+    public List<TokenDTO> getTokensByOwner(String userName, Optional<String> organization, int timeout)
+            throws Exception {
         String org = organization.orElseGet(() -> {
             try {
                 return configService.getOrganization();

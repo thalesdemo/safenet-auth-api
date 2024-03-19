@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.service;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.thalesdemo.safenet.token.api.dto.TokenDataDTO;
 import com.thalesdemo.safenet.token.api.util.SecurityUtil;
 
 @Service
@@ -30,7 +31,7 @@ public class TokenDataService {
     private String storageFilePath;
 
     public TokenDataService() {
-        // TokenDataService is used for storing and retrieving token info 
+        // TokenDataService is used for storing and retrieving token info
         // from an encrypted file on the server. It is loaded with the
         // ScheduledTasks bean in the application context.
     }

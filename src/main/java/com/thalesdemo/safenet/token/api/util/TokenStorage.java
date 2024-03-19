@@ -1,11 +1,11 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.util;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.thalesdemo.safenet.token.api.util.SecurityUtil;
+import com.thalesdemo.safenet.token.api.dto.TokenDataDTO;
 
 public class TokenStorage {
 

@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.exception;
 
 public class ConnectionException extends Exception {
     public ConnectionException(String message) {

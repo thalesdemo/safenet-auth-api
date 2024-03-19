@@ -11,7 +11,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.thalesdemo.safenet.token.api.TokenDetailsDTO;
+import com.thalesdemo.safenet.token.api.dto.TokenDetailsDTO;
 
 public class TokenDetailsParser {
 
@@ -19,7 +19,7 @@ public class TokenDetailsParser {
         // Prevent instantiation, throw Utility class message
         throw new IllegalStateException("Utility class");
     }
-    
+
     public static TokenDetailsDTO extractTokenDetailsFromResponseBody(String xmlResponse) {
         TokenDetailsDTO tokenDetails = new TokenDetailsDTO();
 
@@ -42,12 +42,14 @@ public class TokenDetailsParser {
             tokenDetails.setOtpLength(Integer.parseInt(getElementTextContent(rootElement, "OtpLength")));
             tokenDetails.setActivationCount(Integer.parseInt(getElementTextContent(rootElement, "ActivationCount")));
             tokenDetails.setAuthAttempts(Integer.parseInt(getElementTextContent(rootElement, "AuthAttempts")));
-            tokenDetails.setLastChallengeDate(OffsetDateTime.parse(getElementTextContent(rootElement, "LastChallengeDate")));
+            tokenDetails.setLastChallengeDate(
+                    OffsetDateTime.parse(getElementTextContent(rootElement, "LastChallengeDate")));
             tokenDetails.setTimeBased(Boolean.parseBoolean(getElementTextContent(rootElement, "IsTimeBased")));
             tokenDetails.setTimeInterval(Integer.parseInt(getElementTextContent(rootElement, "TimeInterval")));
             tokenDetails.setDeviceName(getElementTextContent(rootElement, "DeviceName"));
             tokenDetails.setLastAuthDate(OffsetDateTime.parse(getElementTextContent(rootElement, "LastAuthDate")));
-            tokenDetails.setLastSuccessDate(OffsetDateTime.parse(getElementTextContent(rootElement, "LastSuccessDate")));
+            tokenDetails
+                    .setLastSuccessDate(OffsetDateTime.parse(getElementTextContent(rootElement, "LastSuccessDate")));
 
         } catch (Exception e) {
             e.printStackTrace();

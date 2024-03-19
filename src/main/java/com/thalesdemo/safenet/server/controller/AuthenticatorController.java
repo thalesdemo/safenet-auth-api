@@ -16,12 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thalesdemo.safenet.auth.commons.ResponseCode;
-import com.thalesdemo.safenet.token.api.ApiException;
 import com.thalesdemo.safenet.token.api.AuthenticatorResponses;
-import com.thalesdemo.safenet.token.api.PingService;
-import com.thalesdemo.safenet.token.api.TokenDTO;
-import com.thalesdemo.safenet.token.api.TokenListDTO;
-import com.thalesdemo.safenet.token.api.TokenService;
+import com.thalesdemo.safenet.token.api.dto.TokenDTO;
+import com.thalesdemo.safenet.token.api.exception.ApiException;
+import com.thalesdemo.safenet.token.api.service.PingService;
+import com.thalesdemo.safenet.token.api.service.TokenService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -174,8 +173,7 @@ public class AuthenticatorController {
                 tokens.add(token);
                 return ResponseEntity.ok(tokens);
             } else {
-                TokenListDTO tokenList = tokenService.getTokensByOwner(username, organization, 10000);
-                List<TokenDTO> tokens = tokenList.getTokens();
+                List<TokenDTO> tokens = tokenService.getTokensByOwner(username, organization, 10000);
                 return ResponseEntity.ok(tokens);
             }
         } catch (Exception e) {

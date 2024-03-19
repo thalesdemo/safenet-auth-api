@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api.requests;
+package com.thalesdemo.safenet.token.api.request;
 
 import javax.xml.soap.MessageFactory;
 import javax.xml.soap.SOAPBody;

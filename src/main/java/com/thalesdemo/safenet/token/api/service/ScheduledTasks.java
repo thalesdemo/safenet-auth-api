@@ -1,9 +1,11 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import com.thalesdemo.safenet.token.api.dto.TokenDataDTO;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,11 +59,12 @@ public class ScheduledTasks {
         File storage = new File(configService.getTokenStorageFile());
 
         if (!storage.exists() || storage.isDirectory()) {
-            if(connectionStatus) {
+            if (connectionStatus) {
                 logger.info("Storage file doesn't exist. Fetching inventory...");
                 getInventory();
             } else {
-                logger.severe("Storage file doesn't exist, and connection to BSIDCA is down. Result -> No cache available: the endpoint `/list-options` will not function correctly!");
+                logger.severe(
+                        "Storage file doesn't exist, and connection to BSIDCA is down. Result -> No cache available: the endpoint `/list-options` will not function correctly!");
             }
         } else {
             logger.info("Storage file already exists. Skipping inventory fetch in startup initialization.");

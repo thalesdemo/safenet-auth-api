@@ -16,8 +16,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
-import com.thalesdemo.safenet.token.api.HttpClientPool;
-
 public class HttpRequestUtil {
 
     private static final Logger logger = Logger.getLogger(HttpRequestUtil.class.getName());

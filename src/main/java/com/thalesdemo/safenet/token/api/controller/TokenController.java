@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api.controllers;
+package com.thalesdemo.safenet.token.api.controller;
 // package com.thalesdemo.safenet.token.list.api.controllers;
 
 // import java.util.List;

@@ -21,22 +21,22 @@
  */
 package com.thalesdemo.safenet.server.controller;
 
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.http.HttpException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.annotation.Nulls;
 import com.thalesdemo.safenet.auth.api.Authenticate;
 import com.thalesdemo.safenet.auth.api.CustomAuthenticate;
 import com.thalesdemo.safenet.auth.commons.AuthenticationRequest;
@@ -44,6 +44,7 @@ import com.thalesdemo.safenet.auth.commons.AuthenticationResponse;
 import com.thalesdemo.safenet.auth.commons.ResponseCode;
 import com.thalesdemo.safenet.auth.commons.ResponseCodeViews;
 import com.thalesdemo.safenet.auth.commons.ResponseExamples;
+import com.thalesdemo.safenet.token.api.exception.ApiException;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,6 +54,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.Schema.AdditionalPropertiesValue;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -167,7 +169,7 @@ public class AuthenticateController {
 			})
 	})
 	@ApiResponse(responseCode = "401", content = @Content, description = "You have not authenticated to the API using the header X-API-Key.")
-	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "null", additionalProperties = AdditionalPropertiesValue.FALSE))) //AdditionalPropertiesValue.FALSE)))
+	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "null", additionalProperties = AdditionalPropertiesValue.FALSE))) // AdditionalPropertiesValue.FALSE)))
 	@ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
 
 	@JsonView(ResponseCodeViews.Standard.class)
@@ -259,7 +261,8 @@ public class AuthenticateController {
 		}
 
 		// Log the response from the server for debugging purposes.
-		String authResponseMessage = "Responding to authentication request for user: `" + authenticationRequest.getUsername() + "` with: " + serverResponse;
+		String authResponseMessage = "Responding to authentication request for user: `"
+				+ authenticationRequest.getUsername() + "` with: " + serverResponse;
 		Log.info(authResponseMessage);
 
 		/*

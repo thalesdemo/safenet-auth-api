@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.exception;
 
 import java.util.HashMap;
 import java.util.Map;

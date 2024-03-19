@@ -2,7 +2,7 @@ package com.thalesdemo.safenet.token.api.util;
 
 import java.util.List;
 
-import com.thalesdemo.safenet.token.api.TokenDTO;
+import com.thalesdemo.safenet.token.api.dto.TokenDTO;
 
 public class TokenUtils {
 

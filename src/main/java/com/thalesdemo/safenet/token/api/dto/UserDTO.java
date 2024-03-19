@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.dto;
 
 import java.util.List;
 
@@ -34,7 +34,7 @@ public class UserDTO {
     private String containerName;
     private boolean useExternalCredentials;
     private boolean isAccountDormant;
-    
+
     // Getter and Setter methods
 
     @Data
@@ -43,7 +43,7 @@ public class UserDTO {
         private String description;
         private boolean readOnly;
         private boolean empty;
-        
+
         // Getter and Setter methods
     }
 }

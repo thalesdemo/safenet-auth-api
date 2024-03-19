@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.service;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -29,9 +29,17 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import com.thalesdemo.safenet.token.api.requests.ConnectSoapRequest;
-import com.thalesdemo.safenet.token.api.requests.GetTokenSoapRequest;
-import com.thalesdemo.safenet.token.api.requests.GetUserSoapRequest;
+import com.thalesdemo.safenet.token.api.AuthenticationOptions;
+import com.thalesdemo.safenet.token.api.SOAPConfiguration;
+import com.thalesdemo.safenet.token.api.dto.TokenDTO;
+import com.thalesdemo.safenet.token.api.dto.TokenDetailsDTO;
+import com.thalesdemo.safenet.token.api.dto.UserDTO;
+import com.thalesdemo.safenet.token.api.exception.ApiException;
+import com.thalesdemo.safenet.token.api.exception.ConnectionException;
+import com.thalesdemo.safenet.token.api.request.ConnectSoapRequest;
+import com.thalesdemo.safenet.token.api.request.GetTokenSoapRequest;
+import com.thalesdemo.safenet.token.api.request.GetUserSoapRequest;
+import com.thalesdemo.safenet.token.api.util.HttpClientPool;
 import com.thalesdemo.safenet.token.api.util.HttpRequestUtil;
 import com.thalesdemo.safenet.token.api.util.SoapMessageUtil;
 import com.thalesdemo.safenet.token.api.util.TokenDetailsParser;
@@ -259,7 +267,7 @@ public class SOAPClientService {
         return tokenStrings;
     }
 
-    public TokenListDTO getTokensByOwner(String userName, String organization, int timeout) throws Exception {
+    public List<TokenDTO> getTokensByOwner(String userName, String organization, int timeout) throws Exception {
         List<String> tokenSerials = fetchTokenSerialsByOwner(userName, organization, timeout);
         return mapSerialsToTokenDTOs(tokenSerials, userName, organization);
     }
@@ -513,7 +521,7 @@ public class SOAPClientService {
         return dtos;
     }
 
-    private TokenListDTO mapSerialsToTokenDTOs(List<String> tokenSerials, String userName, String organization) {
+    private List<TokenDTO> mapSerialsToTokenDTOs(List<String> tokenSerials, String userName, String organization) {
 
         // Create a list of TokenDTOs for each token serial
         List<TokenDTO> allTokenDTOs = new ArrayList<>();
@@ -547,11 +555,7 @@ public class SOAPClientService {
         optionsList.setRemainingAttempts(remainingAttempts);
         allTokenDTOs.add(0, optionsList);
 
-        // Create the token list DTO and set the owner and tokens
-        TokenListDTO tokenListDTO = new TokenListDTO();
-        tokenListDTO.setOwner(userName);
-        tokenListDTO.setTokens(allTokenDTOs);
-        return tokenListDTO;
+        return allTokenDTOs;
     }
 
     private List<String> mapSerialsToTypes(List<String> tokenSerials) {

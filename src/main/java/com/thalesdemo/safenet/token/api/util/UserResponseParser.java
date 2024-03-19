@@ -10,13 +10,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.thalesdemo.safenet.token.api.UserDTO;
+import com.thalesdemo.safenet.token.api.dto.UserDTO;
 
 public class UserResponseParser {
 
     private UserResponseParser() {
         throw new IllegalStateException("Utility class");
     }
+
     public static UserDTO extractUserDetailsFromResponse(String xmlResponse) {
         UserDTO userDetails = new UserDTO();
 
@@ -29,7 +30,7 @@ public class UserResponseParser {
             dbf.setNamespaceAware(true); // Enable namespace awareness
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.parse(new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8)));
-            
+
             // Adjust to properly handle namespaces
             NodeList resultNodes = doc.getElementsByTagNameNS("*", "GetUserResult");
             if (resultNodes.getLength() > 0) {
@@ -40,10 +41,10 @@ public class UserResponseParser {
                 userDetails.setEmail(getElementTextContent(resultElement, "Email"));
                 userDetails.setMobile(getElementTextContent(resultElement, "Mobile"));
                 // Add similar lines for other fields
-                
+
                 // Example for processing FirstName (assuming it's directly under GetUserResult)
                 userDetails.setFirstName(getElementTextContent(resultElement, "FirstName"));
-                
+
                 // Handling for groups and custom attributes should adjust for their structure
                 // Process groups (omitted here for brevity)
                 // Process custom attributes similarly
@@ -52,7 +53,7 @@ public class UserResponseParser {
             e.printStackTrace();
             // Proper error handling
         }
-        
+
         return userDetails;
     }
 

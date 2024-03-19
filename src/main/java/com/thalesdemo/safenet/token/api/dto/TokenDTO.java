@@ -1,4 +1,4 @@
-package com.thalesdemo.safenet.token.api;
+package com.thalesdemo.safenet.token.api.dto;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -11,7 +11,9 @@ import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL) // Only include non-null fields in JSON output
-@JsonPropertyOrder({ "type", "phone_number", "email_address", "serial_number", "operating_system", "push_otp_capable", "unlock_time", "last_auth_attempt", "last_auth_success", "failed_attempts", "state" }) // Defines the serialization order
+@JsonPropertyOrder({ "type", "phone_number", "email_address", "serial_number", "operating_system", "push_otp_capable",
+        "unlock_time", "last_auth_attempt", "last_auth_success", "failed_attempts", "state" }) // Defines the
+                                                                                               // serialization order
 
 public class TokenDTO {
     private String type;
@@ -37,7 +39,7 @@ public class TokenDTO {
 
     @JsonProperty("last_auth_attempt")
     private OffsetDateTime lastAuthDate;
-    
+
     @JsonProperty("last_auth_success")
     private OffsetDateTime lastSuccessDate;
 
