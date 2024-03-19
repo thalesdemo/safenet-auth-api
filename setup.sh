@@ -268,9 +268,16 @@ replace_marker "$install_dir/config/application.yaml" "<key-alias>" "$key_alias"
 # Run the Java command and capture its output
 keygen_output=$(java -jar $install_dir/keygen-1.0.jar)
 
-# Extract apiKey and apiKeyHash from the output
-apiKey=$(echo "$keygen_output" | awk -F'"' '/"apiKey":/{print $(NF-1)}')
-apiKeyHash=$(echo "$keygen_output" | awk -F'"' '/"apiKeyHash":/{print $(NF-1)}')
+
+# For apiKey (working as expected)
+apiKey=$(echo "$keygen_output" | awk -F'":"|","' '{for (i=1; i<=NF; i++) if ($i ~ /"apiKey$/) {print $(i+1); exit}}')
+
+# Adjusted extraction for apiKeyHash
+apiKeyHash=$(echo "$keygen_output" | awk -F'[:,]' '{for (i=1; i<=NF; i++) if ($i ~ /"apiKeyHash"/) {gsub(/["{}]/, "", $(i+1)); print $(i+1); exit}}')
+
+#Removed - does not work on mac - Extract apiKey and apiKeyHash from the output
+#apiKey=$(echo "$keygen_output" | grep -oP '"apiKey":"\K[^"]+')
+#apiKeyHash=$(echo "$keygen_output" | grep -oP '"apiKeyHash":"\K[^"]+')
 
 # Replace the marker in linux.ini with the apiKeyHash
 replace_marker "$install_dir/config/application.yaml" "<safenet-api-key-hash>" "$apiKeyHash"
