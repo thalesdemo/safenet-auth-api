@@ -1,0 +1,55 @@
+@startuml
+participant "AuthenticateController" as Client
+participant CustomAuthenticate
+participant CustomTokenValidatorWrapperImpl
+participant TokenValidatorAPI
+participant "SafeNet Parking Service" as ParkingService
+participant AuthenticationResponse
+
+Client -> CustomAuthenticate : pushOTP(username, userIp, "", "challenge-response")
+activate CustomAuthenticate
+
+CustomAuthenticate -> CustomAuthenticate : pushChallengeRequest(username, userIp)
+activate CustomAuthenticate
+CustomAuthenticate -> CustomTokenValidatorWrapperImpl : authenticate(requestDTO)
+activate CustomTokenValidatorWrapperImpl
+CustomTokenValidatorWrapperImpl -> TokenValidatorAPI : POST /TokenValidator (challenge)
+TokenValidatorAPI --> CustomTokenValidatorWrapperImpl : authIdUrl
+CustomTokenValidatorWrapperImpl --> CustomAuthenticate : authIdUrl
+deactivate CustomTokenValidatorWrapperImpl
+CustomAuthenticate -> CustomAuthenticate : base64 encode authIdUrl (a.k.a. state)
+
+CustomAuthenticate -> AuthenticationResponse : new AuthenticationResponse(challenge data with encoded authIdUrl)
+activate AuthenticationResponse
+AuthenticationResponse --> CustomAuthenticate
+deactivate AuthenticationResponse
+
+CustomAuthenticate --> Client : AuthenticationResponse
+deactivate CustomAuthenticate
+
+note right of Client: Client displays challenge issued to user (enhanced UX)\n\nWARNING: Consider encrypting encodedAuthIdUrl 
+Client -> CustomAuthenticate : pushOTP(username, userIp, encodedAuthIdUrl, "challenge-response")
+activate CustomAuthenticate
+CustomAuthenticate -> CustomAuthenticate : base64 decode encodedAuthIdUrl 
+
+CustomAuthenticate -> ParkingService : POST /api/parkingspot (authIdUrl)
+activate ParkingService
+note right of ParkingService: Polling until timeout or response available
+ParkingService --> CustomAuthenticate : Response (authStatus)
+deactivate ParkingService
+
+CustomAuthenticate -> CustomTokenValidatorWrapperImpl : pushChallengeResponse(username, authId, authStatus, userIp)
+activate CustomTokenValidatorWrapperImpl
+CustomTokenValidatorWrapperImpl -> TokenValidatorAPI : POST /TokenValidator (validate authId)
+TokenValidatorAPI --> CustomTokenValidatorWrapperImpl : TokenValidatorResponseDTO
+CustomTokenValidatorWrapperImpl --> CustomAuthenticate : authSuccess? (boolean)
+deactivate CustomTokenValidatorWrapperImpl
+
+CustomAuthenticate -> AuthenticationResponse : new AuthenticationResponse(final result)
+activate AuthenticationResponse
+AuthenticationResponse --> CustomAuthenticate
+deactivate AuthenticationResponse
+
+CustomAuthenticate --> Client : AuthenticationResponse
+deactivate CustomAuthenticate
+@enduml

@@ -1,0 +1,59 @@
+@startuml optionsListByOwner_sequence
+participant "AuthenticatorController" as Client
+participant "SOAPClientService" as SOAPService
+participant "ConfigService" as Config
+participant "SOAPConfiguration" as SOAPConfig
+participant "HttpRequestUtil" as HTTPUtil
+participant "AuthenticationOptions" as AuthOptions
+
+Client -> SOAPService : getOptionsListByOwner(userName, org, timeout)
+activate SOAPService
+
+SOAPService -> SOAPService : fetchTokenSerialsByOwner(userName, org, timeout)
+activate SOAPService
+
+alt organization not provided
+    SOAPService -> Config : getOrganization()
+    activate Config
+    Config --> SOAPService : defaultOrg
+    deactivate Config
+else organization provided
+    SOAPService -> SOAPService : Use provided org
+end
+
+SOAPService -> SOAPService : getConfiguration()
+activate SOAPService
+alt configuration not set or cookies empty
+    SOAPService -> SOAPService : connect()
+    activate SOAPService
+    SOAPService -> Config : getDecryptedEmailValue(), getDecryptedPasswordValue()
+    activate Config
+    Config --> SOAPService : decryptedEmail, decryptedPassword
+    deactivate Config
+    SOAPService -> HTTPUtil : sendSOAPRequest(connectRequest)
+    activate HTTPUtil
+    HTTPUtil --> SOAPService : cookies
+    deactivate HTTPUtil
+    SOAPService -> SOAPConfig : setCookies(cookies)
+    deactivate SOAPService
+else configuration and cookies available
+    SOAPService --> SOAPService : Configuration ready
+end
+
+SOAPService -> HTTPUtil : sendSOAPRequest(request for tokens)
+activate HTTPUtil
+HTTPUtil --> SOAPService : SOAP response
+deactivate HTTPUtil
+
+SOAPService -> SOAPService : parseXMLResponse(SOAP response)
+SOAPService --> SOAPService : tokenSerials
+deactivate SOAPService
+
+SOAPService -> AuthOptions : extractOptionsFromSerials(tokenSerials)
+activate AuthOptions
+AuthOptions --> SOAPService : optionsList
+deactivate AuthOptions
+
+SOAPService --> Client : optionsList
+deactivate SOAPService
+@enduml

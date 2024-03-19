@@ -1,0 +1,42 @@
+@startuml
+participant "ScheduledTasks" as Scheduled
+participant "SOAPClientService" as SOAPService
+participant "ConfigService" as Config
+participant "TokenService" as TokenService
+participant "TokenDataService" as TokenData
+participant "File" as StorageFile
+participant "SecurityUtil" as Security
+
+== Initialization and Configuration Loading ==
+Scheduled -> Config : getConfiguration()
+Config --> Scheduled : configValues
+
+Scheduled -> SOAPService : connect()
+SOAPService --> Scheduled : ConnectionEstablished
+
+Scheduled -> StorageFile : checkExists()
+alt File Exists
+    StorageFile --> Scheduled : true
+    Scheduled -> TokenData : loadTokensFromFile()
+    TokenData -> StorageFile : readEncryptedData()
+    StorageFile --> TokenData : encryptedTokenData
+    TokenData -> Security : decrypt(encryptedTokenData, secretKey)
+    Security --> TokenData : decryptedData
+    TokenData --> Scheduled : List<TokenDataDTO>
+else File Does Not Exist
+    StorageFile --> Scheduled : false
+    Scheduled -> TokenService : getInventory()
+end
+
+== Keep Alive Task ==
+Scheduled -> SOAPService : pingConnection(pingTimeoutInSeconds, "get".equalsIgnoreCase(pingMethod))
+SOAPService --> Scheduled : pingResult
+
+== Inventory Task ==
+Scheduled -> TokenService : getAllTokens()
+TokenService --> Scheduled : List<TokenDataDTO>
+Scheduled -> TokenData : storeTokens(tokens)
+TokenData -> Security : encrypt(jsonData, secretKey)
+Security --> TokenData : encryptedData
+TokenData -> StorageFile : write(encryptedData)
+@enduml

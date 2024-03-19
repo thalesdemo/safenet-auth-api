@@ -1,0 +1,59 @@
+@startuml custom_authenticate_uml
+package com.thalesdemo.safenet.auth.api {
+    class CustomAuthenticate {
+        ' The push trigger character used with the push notification authentication method in the TokenValidator API.
+        - PUSH_TRIGGER_CHAR : String = "p"
+        ' The connect and read timeout for the RestTemplate.
+        - READ_TIMEOUT : int
+        - CONNECT_TIMEOUT : int
+        ' The logger for the CustomAuthenticate class.
+        - Log : Logger
+        ' The resource name for the TokenValidator API.
+        - resourceName : String
+        ' The primary and failover authentication URLs for the TokenValidator API.
+        - primaryAuthUrl : String
+        - failoverAuthUrl : String
+        ' The agent key for the TokenValidator API.
+        - agentKey : String
+        ' The CustomTokenValidatorWrapperImpl used to make the TokenValidator calls.
+        - tokenValidator : CustomTokenValidatorWrapperImpl
+
+        + build() : CustomAuthenticate
+        + setPrimaryAuthUrl(primaryAuthUrl : String) : CustomAuthenticate
+        + setFailoverAuthUrl(failoverAuthUrl : String) : CustomAuthenticate
+        + setAgentKey(agentKey : String) : CustomAuthenticate
+        + setResourceName(resourceName : String) : CustomAuthenticate
+        + pushOTP(username : String, userIp : String, authIdUrl : String, mode : String) : AuthenticationResponse
+        - restTemplateWithRedirect() : RestTemplate
+        - postParkingService(authIdUrl : String) : ResponseEntity<String>
+        - pushChallengeRequest(username : String, userIp : String) : String
+        - pushParkingService(authIdUrl : String) : String
+        - pushChallengeResponse(username : String, authId : String, authStatus : String, userIp : String) : boolean
+    }
+}
+
+package com.safenet.keycloak.agent.tokenvalidatoradapter.dto.tv {
+    class TokenValidatorRequestDTO {
+        .. refer to definition ..
+    }
+
+    class TokenValidatorResponseDTO {
+        .. refer to definition ..
+    }
+}
+
+package com.thalesdemo.safenet.auth.commons {
+    class AuthenticationResponse {
+        .. refer to defintion ..
+    }
+
+    class AuthenticationChallenge {
+        .. refer to definition ..
+    }
+}
+
+CustomAuthenticate --> TokenValidatorRequestDTO : constructs
+CustomAuthenticate --> TokenValidatorResponseDTO : parses
+CustomAuthenticate --> AuthenticationResponse : returns
+CustomAuthenticate --> AuthenticationChallenge : creates
+@enduml

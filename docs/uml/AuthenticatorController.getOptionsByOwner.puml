@@ -1,0 +1,36 @@
+@startuml authenticate_controller_list_options_sequence
+participant Client
+participant "AuthenticatorController" as Controller
+participant "Environment" as Env
+participant "PingService" as BsidcaPingService
+participant "TokenService" as TokenService
+participant "OptionsResponse" as RespEntityOptions
+participant "ErrorResponse" as RespEntityError
+
+Client -> Controller : GET /{username}/list-options
+activate Controller
+
+Controller -> Env : getProperty("ping-method")
+Env --> Controller
+
+Controller -> BsidcaPingService : handlePing()
+activate BsidcaPingService
+BsidcaPingService --> Controller
+deactivate BsidcaPingService
+
+alt BSIDCA Ping Status OK
+    Controller -> TokenService : getOptionsListByOwner(username, org, timeout)
+    activate TokenService
+    TokenService --> Controller : optionsList
+    deactivate TokenService
+
+    Controller --> RespEntityOptions : new(optionsList)
+    RespEntityOptions --> Client : response
+    |||
+else BSIDCA Ping Status Not OK or Exception in Ping/TokenService
+    Controller --> RespEntityError : status(HttpStatus.SERVICE_UNAVAILABLE / INTERNAL_SERVER_ERROR)
+    RespEntityError --> Client : errorResponse
+end
+
+deactivate Controller
+@enduml
