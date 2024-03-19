@@ -221,7 +221,7 @@ replace_marker "$install_dir/config/application.yaml" "<install-dir>" "$install_
 ### SSL/PORT
 
 # Prompt user for configurations
-application_port=$(prompt_user "Enter the application port number" "8080")
+application_port=$(prompt_user "Enter the application port number" "8888")
 enable_ssl=$(prompt_user "Do you want to enable SSL? (true/false)" "false")
 
 if [[ "$enable_ssl" == "true" ]]; then
