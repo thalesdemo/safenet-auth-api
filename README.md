@@ -24,6 +24,7 @@ bash setup.sh
 > **NOTE**: Please ensure you have the necessary permissions to execute the script in your environment.
 
 <h2>API Reference</h2>
+
 To view the API documentation and all available endpoints, open your web browser and go to http://localhost:8888.
 
 ![example.gif](https://github.com/thalesdemo/safenet-auth-api/blob/v0.1.0/img/example.gif)
