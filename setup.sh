@@ -46,7 +46,7 @@ check_java_version() {
 
 # Function to prompt the user to install Java 17
 prompt_install_java() {
-    echo # This adds a new line for better readability
+    echo "" # This adds a new line for better readability
     read -p "Do you want to install Java 17? [y/N]: " install
     if [[ ! "$install" =~ ^[Yy]$ ]]; then
         echo "Please ensure Java 17 is installed before proceeding."
@@ -80,13 +80,14 @@ download_to_dir() {
     local destination=$2
 
     if [[ -e "$destination" ]]; then
+        echo "" # This adds a new line for better readability
         read -p "$destination already exists. Do you want to overwrite? [y/N]: " overwrite
         if [[ ! "$overwrite" =~ ^[Yy]$ ]]; then
             echo "Skipping download of $destination"
             return
         fi
     fi
-    echo # This adds a new line for better readability
+    echo "" # This adds a new line for better readability
     echo "Downloading $file_path to $destination..."
     curl -L -o "$destination" "$file_path"
 }
@@ -102,7 +103,7 @@ prompt_user() {
         echo "$input_value"
         return
     fi
-
+    echo "" # This adds a new line for better readability
     read -p "$prompt_message (Default: $default_key): " input_value
 
     # If input is empty, use the default key as the value
@@ -135,7 +136,7 @@ replace_marker() {
 }
 
 # Start the main script
-echo # This adds a new line for better readability
+echo "" # This adds a new line for better readability
 echo "Checking Java installation..."
 check_java_version
 
