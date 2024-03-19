@@ -46,25 +46,26 @@ check_java_version() {
 
 # Function to prompt the user to install Java 17
 prompt_install_java() {
+    echo # This adds a new line for better readability
     read -p "Do you want to install Java 17? [y/N]: " install
     if [[ ! "$install" =~ ^[Yy]$ ]]; then
         echo "Please ensure Java 17 is installed before proceeding."
         exit 1
     fi
 
-    if command -v apt &> /dev/null; then
+    if command -v apt &>/dev/null; then
         echo "Installing Java 17 using apt..."
         sudo apt update && sudo apt install -y openjdk-17-jdk
-    elif command -v dnf &> /dev/null; then
+    elif command -v dnf &>/dev/null; then
         echo "Installing Java 17 using dnf..."
         sudo dnf install -y java-17-openjdk
-    elif command -v yum &> /dev/null; then
+    elif command -v yum &>/dev/null; then
         echo "Installing Java 17 using yum..."
         sudo yum install -y java-17-openjdk
-    elif command -v zypper &> /dev/null; then
+    elif command -v zypper &>/dev/null; then
         echo "Installing Java 17 using zypper..."
         sudo zypper install -y java-17-openjdk
-    elif command -v pacman &> /dev/null; then
+    elif command -v pacman &>/dev/null; then
         echo "Installing Java 17 using pacman..."
         sudo pacman -Syu java-openjdk-bin
     else
@@ -85,6 +86,7 @@ download_to_dir() {
             return
         fi
     fi
+    echo # This adds a new line for better readability
     echo "Downloading $file_path to $destination..."
     curl -L -o "$destination" "$file_path"
 }
@@ -127,7 +129,6 @@ prompt_user() {
     echo "$input_value"
 }
 
-
 # Function to replace markers in files
 replace_marker() {
     local file=$1
@@ -138,6 +139,7 @@ replace_marker() {
 }
 
 # Start the main script
+echo # This adds a new line for better readability
 echo "Checking Java installation..."
 check_java_version
 
@@ -316,7 +318,6 @@ max_failed_attempts=$(prompt_user "Enter the maximum number of failed attempts b
 
 # Replace max failed attempts marker in application.yaml
 replace_marker "$install_dir/config/application.yaml" "<safenet-user-max-failed-attempts>" $max_failed_attempts
-
 
 # Export the encryption key for the current session and instruct the user to do so for future sessions
 echo
