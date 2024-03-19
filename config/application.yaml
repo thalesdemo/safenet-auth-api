@@ -68,3 +68,6 @@ safenet:
         - "sms"
         - "email"
       # Add more mappings as needed
+      
+  user-lockout:
+    max-failed-attempts: <safenet-user-max-failed-attempts>

@@ -145,10 +145,10 @@ ensure_dir_exists "$install_dir/logs"
 
 # Download necessary files
 download_to_dir "https://github.com/thalesdemo/safenet-auth-api/releases/download/"$LATEST_VERSION_API"/safenet-auth-api-"$LATEST_VERSION_API"-alt.jar" "$install_dir/safenet-auth-api.jar"
-download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/alternate/config/application.yaml" "$install_dir/config/application.yaml"
-download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/alternate/config/linux.ini" "$install_dir/config/linux.ini"
-download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/alternate/tools/keygen-1.0.jar" "$install_dir/keygen-1.0.jar"
-download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/alternate/tools/EncryptionUtility.java" "$install_dir/EncryptionUtility.java"
+download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/config/application.yaml" "$install_dir/config/application.yaml"
+download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/config/linux.ini" "$install_dir/config/linux.ini"
+download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/tools/keygen-1.0.jar" "$install_dir/keygen-1.0.jar"
+download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/tools/EncryptionUtility.java" "$install_dir/EncryptionUtility.java"
 
 # Prompt user for configurations
 base_url=$(prompt_user "Enter the base URL for SafeNet" "https://cloud.us.safenetid.com")
@@ -309,7 +309,7 @@ echo "1. For the gateway to function, ensure you set the environment variable fo
 echo "export ENCRYPTION_SECRET_KEY=$encryption_key"
 echo
 echo Or run for example java with:
-echo sudo -u root -E ENCRYPTION_SECRET_KEY=$encryption_key java -jar safenet-auth-api-0.0.6-alt.jar
+echo sudo -u root -E ENCRYPTION_SECRET_KEY=$encryption_key java -jar safenet-auth-api.jar
 echo
 
 # Print apiKey to the screen
