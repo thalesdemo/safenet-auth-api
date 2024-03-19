@@ -45,31 +45,40 @@ check_java_version() {
 }
 
 # Function to prompt the user to install Java 17
+# Function to prompt the user to install Java 17
 prompt_install_java() {
-    echo "" # This adds a new line for better readability
-    read -p "Do you want to install Java 17? [y/N]: " install
+    local java_version="17"
+    local java_package_linux="openjdk-17-jdk" # Default package name for most Linux distros
+    local java_package_mac="temurin"          # Homebrew cask for Eclipse Temurin (AdoptOpenJDK)
+
+    echo # This adds a new line for better readability
+    read -p "Do you want to install Java $java_version? [y/N]: " install
     if [[ ! "$install" =~ ^[Yy]$ ]]; then
-        echo "Please ensure Java 17 is installed before proceeding."
+        echo "Please ensure Java $java_version is installed before proceeding."
         exit 1
     fi
 
     if command -v apt &>/dev/null; then
-        echo "Installing Java 17 using apt..."
-        sudo apt update && sudo apt install -y openjdk-17-jdk
+        echo "Installing Java $java_version using apt..."
+        sudo apt update && sudo apt install -y $java_package_linux
     elif command -v dnf &>/dev/null; then
-        echo "Installing Java 17 using dnf..."
-        sudo dnf install -y java-17-openjdk
+        echo "Installing Java $java_version using dnf..."
+        sudo dnf install -y java-$java_version-openjdk
     elif command -v yum &>/dev/null; then
-        echo "Installing Java 17 using yum..."
-        sudo yum install -y java-17-openjdk
+        echo "Installing Java $java_version using yum..."
+        sudo yum install -y java-$java_version-openjdk
     elif command -v zypper &>/dev/null; then
-        echo "Installing Java 17 using zypper..."
-        sudo zypper install -y java-17-openjdk
+        echo "Installing Java $java_version using zypper..."
+        sudo zypper install -y java-$java_version-openjdk
     elif command -v pacman &>/dev/null; then
-        echo "Installing Java 17 using pacman..."
-        sudo pacman -Syu java-openjdk-bin
+        echo "Installing Java $java_version using pacman..."
+        sudo pacman -Syu $java_package_linux # Adjust if the package name differs on Arch Linux
+    elif command -v brew &>/dev/null; then
+        echo "Installing Java $java_version using Homebrew..."
+        # Homebrew command for installing Java might differ based on available casks/formulae
+        brew install --cask $java_package_mac
     else
-        echo "Package manager not detected. Please install Java 17 manually."
+        echo "Package manager not detected. Please install Java $java_version manually."
         exit 1
     fi
 }
@@ -98,11 +107,6 @@ prompt_user() {
     local default_key=$2
     local input_value
 
-    # Check if a previous value exists
-    if [[ -n ${default_key} && -n $input_value ]]; then
-        echo "$input_value"
-        return
-    fi
     echo "" # This adds a new line for better readability
     read -p "$prompt_message (Default: $default_key): " input_value
 
@@ -141,6 +145,7 @@ echo "Checking Java installation..."
 check_java_version
 
 # Get installation directory
+echo "" # This adds a new line for better readability
 read -p "Enter the installation directory (Default is the current directory): " install_dir
 [[ -z "$install_dir" ]] && install_dir=$(pwd)
 
