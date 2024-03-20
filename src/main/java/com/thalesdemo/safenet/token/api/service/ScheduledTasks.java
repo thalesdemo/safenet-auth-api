@@ -93,8 +93,8 @@ public class ScheduledTasks {
                 boolean resultPing = clientService.pingConnection(pingTimeoutInSeconds,
                         "get".equalsIgnoreCase(pingMethod));
 
-                logger.log(Level.INFO, "Ping result after {0} seconds: {1}",
-                        new Object[] { pingIntervalInSeconds, resultPing });
+                logger.log(Level.INFO, "Ping result after {0} seconds: {1} (attempt: {2})",
+                        new Object[] { pingIntervalInSeconds, resultPing, i + 1 });
 
                 if (resultPing) {
                     // Ping successful

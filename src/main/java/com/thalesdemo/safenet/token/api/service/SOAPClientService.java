@@ -1,5 +1,8 @@
 package com.thalesdemo.safenet.token.api.service;
 
+import okhttp3.Response;
+import java.util.List;
+import java.util.ArrayList;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URLEncoder;
@@ -41,10 +44,14 @@ import com.thalesdemo.safenet.token.api.request.GetTokenSoapRequest;
 import com.thalesdemo.safenet.token.api.request.GetUserSoapRequest;
 import com.thalesdemo.safenet.token.api.util.HttpClientPool;
 import com.thalesdemo.safenet.token.api.util.HttpRequestUtil;
+import com.thalesdemo.safenet.token.api.util.OkHttpUtil;
 import com.thalesdemo.safenet.token.api.util.SoapMessageUtil;
 import com.thalesdemo.safenet.token.api.util.TokenDetailsParser;
 import com.thalesdemo.safenet.token.api.util.TokenUtils;
 import com.thalesdemo.safenet.token.api.util.UserResponseParser;
+
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 @Service
 public class SOAPClientService {
@@ -83,10 +90,11 @@ public class SOAPClientService {
                     null);
             logger.log(Level.FINE, "connectRequest: {0}", SoapMessageUtil.soapMessageToString(connectRequest));
 
-            List<String> cookies = sendConnectSOAPRequest(connectRequest);
+            List<String> cookies = sendConnectSOAPRequestOkHttp(connectRequest);
             configService.clearSensitiveData(decryptedEmail);
             configService.clearSensitiveData(decryptedPassword);
 
+            logger.finest("Setting cookies in SOAPConfiguration to: " + cookies);
             configuration.setCookies(cookies);
 
             return "Connected with cookies: " + cookies + "\n";
@@ -111,36 +119,83 @@ public class SOAPClientService {
         return configuration;
     }
 
-    private List<String> sendConnectSOAPRequest(SOAPMessage request) throws Exception {
-        // Send the Connect SOAP request and extract the cookies
-        HttpResponse response = sendSOAPRequest(request);
+    public void setConfiguration(SOAPConfiguration configuration) {
+        this.configuration = configuration;
+    }
 
-        int statusCode = response.getStatusLine().getStatusCode();
-        String responseBody = EntityUtils.toString(response.getEntity());
-        logger.log(Level.INFO, "SOAP BSIDCA Connect() Status Code Response: {0}", statusCode);
-        logger.log(Level.INFO, "SOAP BSIDCA Connect() Response Body:\n{0}", responseBody);
-        // Check if the response is successful (status code 200) and contains the
-        // "Set-Cookie" headers
-        if (statusCode == 200) {
-            if (responseBody.contains("AUTH_SUCCESS")) {
+    protected Response sendSOAPRequestOkHttp(SOAPMessage request) throws Exception {
+        String soapMessageString = SoapMessageUtil.soapMessageToString(request);
+        String contentType = "application/soap+xml; charset=utf-8";
 
-                return extractCookiesFromResponse(response);
-            } else if (responseBody.contains("AUTH_FAILURE")) {
+        // Get timeout from config service
+        Integer timeout = configService.getDefaultHttpRequestTimeout();
+
+        // Get the base URL from your configuration
+        String url = configuration.getBaseUrl();
+
+        // Get cookies from your configuration
+        List<String> cookies = configuration.getCookies();
+
+        // Use the refactored sendPostRequest method from OkHttpUtil
+        return OkHttpUtil.sendPostRequest(url, soapMessageString, cookies, contentType, timeout);
+    }
+
+    private List<String> sendConnectSOAPRequestOkHttp(SOAPMessage request) throws Exception {
+        // Clear any existing cookies
+        configuration.clearCookies();
+
+        // Send the SOAP request
+        Response response = sendSOAPRequestOkHttp(request);
+
+        // Extract the status code and response body
+        int statusCode = response.code();
+        ResponseBody responseBody = response.body();
+        String responseBodyString = responseBody != null ? responseBody.string() : "";
+
+        logger.log(Level.INFO, "SOAP Connect() Status Code Response: {0}", statusCode);
+        logger.log(Level.INFO, "SOAP Connect() Response Body:\n{0}", responseBodyString);
+
+        try {
+            if (statusCode == 200 && responseBodyString.contains("AUTH_SUCCESS")) {
+                // Extract and return cookies if the response is successful
+                List<String> cookiesResponse = extractCookiesFromResponse(response);
+                if (cookiesResponse.isEmpty()) {
+                    // If no new cookies were found, use the existing ones
+                    return configuration.getCookies();
+                }
+                return cookiesResponse;
+            } else if (responseBodyString.contains("AUTH_FAILURE")) {
                 throw new ApiException("Authentication failed");
             } else {
-                throw new ApiException("Unexpected response content: " + responseBody);
+                throw new ApiException("Unexpected response content: " + responseBodyString);
+            }
+        } finally {
+            // Ensure the response body is closed to release resources
+            if (responseBody != null) {
+                responseBody.close();
+            }
+        }
+    }
+
+    // This method needs to be implemented to extract cookies from the OkHttp
+    // Response
+    private List<String> extractCookiesFromResponse(Response response) {
+        // Get all 'Set-Cookie' headers from the response
+        List<String> setCookieHeaders = response.headers("Set-Cookie");
+
+        List<String> cookies = new ArrayList<>();
+
+        for (String header : setCookieHeaders) {
+            if (header != null && !header.isEmpty()) {
+                cookies.add(header);
             }
         }
 
-        // If status code is not 200, extract more details for the error message
-        String reasonPhrase = response.getStatusLine().getReasonPhrase();
-
-        String briefError = responseBody.length() > 400 ? responseBody.substring(0, 400) + "..." : responseBody;
-
-        throw new ApiException(String.format("Failed to extract Connect() cookies. Status: %d %s. Response: %s",
-                statusCode, reasonPhrase, briefError));
+        return cookies;
     }
 
+    // TODO: Deprecate this method and use the OkHttp version instead. Rethink the
+    // return type.
     protected CloseableHttpResponse sendSOAPRequest(SOAPMessage request) throws Exception {
         String soapMessageString = SoapMessageUtil.soapMessageToString(request);
         String contentType = "application/soap+xml; charset=utf-8";
@@ -170,6 +225,8 @@ public class SOAPClientService {
         return pingConnection(timeout, true);
     }
 
+    // TODO: Use the refactored sendGetRequest method from HttpRequestUtil with
+    // OkHttp (TBD)
     public boolean pingConnection(int timeout, boolean useGet) {
         CloseableHttpResponse response = null;
 
@@ -229,20 +286,6 @@ public class SOAPClientService {
         }
         return false;
 
-    }
-
-    private List<String> extractCookiesFromResponse(HttpResponse response) {
-        Header[] headers = response.getHeaders("Set-Cookie");
-        List<String> cookies = new ArrayList<>();
-
-        for (Header header : headers) {
-            String cookieValue = header.getValue();
-            if (cookieValue != null && !cookieValue.isEmpty()) {
-                cookies.add(cookieValue);
-            }
-        }
-
-        return cookies;
     }
 
     private List<String> parseXMLResponse(String xmlResponse) throws Exception {

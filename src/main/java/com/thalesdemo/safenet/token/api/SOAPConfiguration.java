@@ -29,6 +29,10 @@ public class SOAPConfiguration {
         this.cookies = cookies;
     }
 
+    public void clearCookies() {
+        cookies.clear();
+    }
+    
     public boolean isConnected() {
         return !cookies.isEmpty();
     }
