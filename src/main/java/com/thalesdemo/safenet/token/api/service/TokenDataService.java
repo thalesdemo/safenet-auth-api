@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.crypto.AEADBadTagException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -57,8 +59,17 @@ public class TokenDataService {
                 String decryptedData = decryptData(encryptedData);
                 decryptedTokens = objectMapper.readValue(decryptedData, new TypeReference<List<TokenDataDTO>>() {
                 });
+
+            } catch (IllegalArgumentException | AEADBadTagException e) {
+                String errorMsg = "Error (" + e.getClass().getSimpleName() + ") while decrypting tokens from file: " + e.getMessage();
+                logger.log(Level.SEVERE, errorMsg);
+                throw new IOException(errorMsg, e); // Include 'e' as the cause
+            } catch (IOException e) {
+                String errorMsg = "Error (IOException) reading tokens from file: " + e.getMessage();
+                logger.log(Level.SEVERE, errorMsg);
+                throw new IOException(errorMsg, e); // Include 'e' as the cause for consistency
             } catch (Exception e) {
-                String errorMsg = "Error decrypting and loading tokens from file: " + e.getMessage();
+                String errorMsg = "Error (Unexpected) while handling tokens from file: " + e.getMessage();
                 logger.log(Level.SEVERE, errorMsg, e);
             }
         }

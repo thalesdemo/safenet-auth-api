@@ -58,15 +58,7 @@ public class ScheduledTasks {
         // Check if storageFile exists
         File storage = new File(configService.getTokenStorageFile());
 
-        if (!storage.exists() || storage.isDirectory()) {
-            if (connectionStatus) {
-                logger.info("Storage file doesn't exist. Fetching inventory...");
-                getInventory();
-            } else {
-                logger.severe(
-                        "Storage file doesn't exist, and connection to BSIDCA is down. Result -> No cache available: the endpoint `/list-options` will not function correctly!");
-            }
-        } else {
+        if (storage.exists() && !storage.isDirectory()) {
             logger.info("Storage file already exists. Skipping inventory fetch in startup initialization.");
 
             try {
@@ -79,11 +71,22 @@ public class ScheduledTasks {
 
                 logger.log(Level.INFO, "Loaded tokens from storage file: {0}", tokens.size());
                 logger.log(Level.FINE, "tokenData: {0}", tokens);
+                return;
+
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error loading tokens from storage file.", e);
+                logger.log(Level.SEVERE, "Error loading tokens from storage file.", e.getMessage());
                 // Handle the IOException as needed (e.g., logging, fallback behavior)
             }
         }
+
+        if (connectionStatus) {
+            logger.info("Storage file doesn't exist (or is invalid). Fetching inventory from remote server...");
+            getInventory();
+        } else {
+            logger.severe(
+                    "Storage file doesn't exist, and connection to BSIDCA is down. Result -> No cache available: the endpoint `/list-options` will not function correctly!");
+        }
+
     }
 
     @Scheduled(fixedRateString = "#{${safenet.bsidca.scheduling.ping-interval} * 1000}", initialDelayString = "#{${safenet.bsidca.scheduling.ping-interval} * 1000}")
