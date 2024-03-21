@@ -71,7 +71,6 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Autowired
     private ApplicationContext applicationContext;
 
@@ -126,9 +125,8 @@ public class WebSecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers
-                    // Customizing frame options
-                    .frameOptions(FrameOptionsConfig::sameOrigin)
-                );
+                        // Customizing frame options
+                        .frameOptions(FrameOptionsConfig::sameOrigin));
 
         return http.build();
     }
@@ -153,8 +151,7 @@ public class WebSecurityConfig {
         FilterRegistrationBean<SwaggerUiFilter> registrationBean = new FilterRegistrationBean<>();
         registrationBean.setFilter(new SwaggerUiFilter());
         registrationBean.addUrlPatterns("/swagger-ui/*");
-        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE); // Set the order
-        System.out.println("SwaggerUiFilter: /swagger-ui/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE); // Set the order to the highest precedence
         return registrationBean;
     }
 
