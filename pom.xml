@@ -14,6 +14,13 @@
 	<version>0.1.0-alt</version>
 	<name>SafeNet RESTful Authentication Gateway</name>
 	<description>An API for authenticating users using SafeNet tokens</description>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+		</license>
+	</licenses>
+	<url>https://github.com/thalesdemo/safenet-auth-api</url>
 	<developers>
 		<developer>
 			<id>cina</id>
@@ -90,6 +97,7 @@
 			<artifactId>jboss-logging</artifactId>
 			<version>3.5.0.Final</version>
 		</dependency>
+		<!-- For Push OTP in com.safenet.keycloak.agent.tokenvalidatoradapter.tvadapter.TokenValidatorWrapperImpl.authenticate -->
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
@@ -119,18 +127,13 @@
 			<artifactId>javax.xml.soap-api</artifactId>
 			<version>1.4.0</version>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.httpcomponents</groupId>
-			<artifactId>httpclient</artifactId>
-			<version>4.5.14</version>
-		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp -->
 		<dependency>
-		    <groupId>com.squareup.okhttp3</groupId>
-		    <artifactId>okhttp</artifactId>
-		    <version>4.12.0</version>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.12.0</version>
 		</dependency>
-		
+
 	</dependencies>
 	<build>
 		<plugins>

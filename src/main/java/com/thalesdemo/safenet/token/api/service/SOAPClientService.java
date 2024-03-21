@@ -1,9 +1,5 @@
 package com.thalesdemo.safenet.token.api.service;
 
-import okhttp3.Response;
-import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
 import java.io.StringReader;
 import java.net.URLEncoder;
 import java.time.OffsetDateTime;
@@ -20,11 +16,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.soap.SOAPMessage;
 
-import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -42,8 +33,6 @@ import com.thalesdemo.safenet.token.api.exception.ConnectionException;
 import com.thalesdemo.safenet.token.api.request.ConnectSoapRequest;
 import com.thalesdemo.safenet.token.api.request.GetTokenSoapRequest;
 import com.thalesdemo.safenet.token.api.request.GetUserSoapRequest;
-import com.thalesdemo.safenet.token.api.util.HttpClientPool;
-import com.thalesdemo.safenet.token.api.util.HttpRequestUtil;
 import com.thalesdemo.safenet.token.api.util.OkHttpUtil;
 import com.thalesdemo.safenet.token.api.util.SoapMessageUtil;
 import com.thalesdemo.safenet.token.api.util.TokenDetailsParser;
@@ -69,11 +58,8 @@ public class SOAPClientService {
 
     private SOAPConfiguration configuration;
 
-    private final CloseableHttpClient httpClient;
-
     public SOAPClientService() {
         this.configuration = null;
-        this.httpClient = HttpClientPool.getHttpClient();
     }
 
     protected String connect() throws Exception {
@@ -194,25 +180,6 @@ public class SOAPClientService {
         return cookies;
     }
 
-    // TODO: Deprecate this method and use the OkHttp version instead. Rethink the
-    // return type.
-    protected CloseableHttpResponse sendSOAPRequest(SOAPMessage request) throws Exception {
-        String soapMessageString = SoapMessageUtil.soapMessageToString(request);
-        String contentType = "application/soap+xml; charset=utf-8";
-
-        // Get timeout from config service
-        Integer timeout = configService.getDefaultHttpRequestTimeout();
-
-        // Get the base URL from your configuration
-        String url = configuration.getBaseUrl();
-
-        // Get cookies from your configuration
-        List<String> cookies = configuration.getCookies();
-
-        // Use the refactored sendPostRequest method from HttpRequestUtil
-        return HttpRequestUtil.sendPostRequest(url, soapMessageString, cookies, contentType, timeout);
-    }
-
     public boolean pingConnection() {
         return pingConnection(10, false);
     }
@@ -225,10 +192,8 @@ public class SOAPClientService {
         return pingConnection(timeout, true);
     }
 
-    // TODO: Use the refactored sendGetRequest method from HttpRequestUtil with
-    // OkHttp (TBD)
     public boolean pingConnection(int timeout, boolean useGet) {
-        CloseableHttpResponse response = null;
+        Response response = null;
 
         try {
             // Check for null values and if connected.
@@ -238,12 +203,12 @@ public class SOAPClientService {
             }
 
             if (useGet) {
-                response = HttpRequestUtil.sendGetRequest(
+                response = OkHttpUtil.sendGetRequest(
                         configuration.getBaseUrl() + "/PingConnection",
                         configuration.getCookies(),
                         timeout);
             } else {
-                response = HttpRequestUtil.sendPostRequest(
+                response = OkHttpUtil.sendPostRequest(
                         configuration.getBaseUrl() + "/PingConnection",
                         null, configuration.getCookies(),
                         "application/x-www-form-urlencoded",
@@ -251,10 +216,11 @@ public class SOAPClientService {
             }
 
             // Check the HTTP status code
-            int statusCode = response.getStatusLine().getStatusCode();
+            int statusCode = response.code();
             if (statusCode >= 200 && statusCode < 300) {
                 // Parse the XML content from the response entity
-                String responseContent = EntityUtils.toString(response.getEntity(), "UTF-8");
+                String responseContent = response.body().string(); // EntityUtils.toString(response.getEntity(),
+                                                                   // "UTF-8");
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                 factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
                 factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
@@ -321,7 +287,7 @@ public class SOAPClientService {
     }
 
     private List<String> fetchTokenSerialsByOwner(String userName, String organization, int timeout) throws Exception {
-        CloseableHttpResponse response = null;
+        Response response = null;
         try {
 
             String url = configuration.getBaseUrl() + "/GetTokensByOwner";
@@ -330,19 +296,20 @@ public class SOAPClientService {
             String requestBody = "userName=" + URLEncoder.encode(userName, "UTF-8")
                     + "&organization=" + URLEncoder.encode(organization, "UTF-8");
 
-            // Use the refactored sendPostRequest method from HttpRequestUtil with the
-            // correct content type
-            response = HttpRequestUtil.sendPostRequest(url, requestBody, configuration.getCookies(),
+            response = OkHttpUtil.sendPostRequest(url, requestBody, configuration.getCookies(),
                     "application/x-www-form-urlencoded", timeout);
 
-            if (response.getEntity() != null) {
-                String responseString = EntityUtils.toString(response.getEntity());
+            if ((response.code() >= 200 || response.code() < 300) && response.body() != null) {
+                String responseString = response.body().string();
                 return parseXMLResponse(responseString);
             } else {
+                response.close(); // close the response to release resources
+                logger.fine("Closed response in else block");
                 throw new RuntimeException("Empty response from server.");
             }
         } finally {
             if (response != null) {
+                logger.fine("Closed response in finally block");
                 response.close();
             }
         }
@@ -589,14 +556,17 @@ public class SOAPClientService {
             remainingAttempts = Math.max(0, remainingAttempts); // Ensure remainingAttempts is not negative
         }
 
-        // Create the options list and add it to the beginning of the token list
-        TokenDTO optionsList = new TokenDTO();
-        optionsList.setType("options");
-        optionsList.setOptions(extractOptionsFromSerials(tokenSerials));
-        optionsList.setMaxLockoutAttempts(maxLockoutAttempts);
-        optionsList.setOverallFailedAttempts(overallFailedAttempts);
-        optionsList.setRemainingAttempts(remainingAttempts);
-        allTokenDTOs.add(0, optionsList);
+        // if there are tokens, then add the options list
+        if (!tokenSerials.isEmpty()) {
+            // Create the options list and add it to the beginning of the token list
+            TokenDTO optionsList = new TokenDTO();
+            optionsList.setType("options");
+            optionsList.setOptions(extractOptionsFromSerials(tokenSerials));
+            optionsList.setMaxLockoutAttempts(maxLockoutAttempts);
+            optionsList.setOverallFailedAttempts(overallFailedAttempts);
+            optionsList.setRemainingAttempts(remainingAttempts);
+            allTokenDTOs.add(0, optionsList);
+        }
 
         return allTokenDTOs;
     }
@@ -617,7 +587,7 @@ public class SOAPClientService {
     public TokenDetailsDTO getTokenDetails(String serial, String organization) {
         try {
             SOAPMessage request = GetTokenSoapRequest.createGetTokenRequest(serial, organization);
-            CloseableHttpResponse response = this.sendSOAPRequest(request);
+            Response response = this.sendSOAPRequestOkHttp(request);
 
             // Handle the SOAP response, maybe extract tokens from it or handle errors.
             return processSOAPResponseForTokenDetails(response);
@@ -627,15 +597,15 @@ public class SOAPClientService {
         }
     }
 
-    private TokenDetailsDTO processSOAPResponseForTokenDetails(CloseableHttpResponse response) throws Exception {
-        String responseBody = EntityUtils.toString(response.getEntity());
+    private TokenDetailsDTO processSOAPResponseForTokenDetails(Response response) throws Exception {
+        String responseBody = response.body().string();
         return TokenDetailsParser.extractTokenDetailsFromResponseBody(responseBody);
     }
 
     public UserDTO getUserDetails(String userName, String organization) {
         try {
             SOAPMessage request = GetUserSoapRequest.createGetUserRequest(userName, organization);
-            CloseableHttpResponse response = this.sendSOAPRequest(request);
+            Response response = this.sendSOAPRequestOkHttp(request);
 
             // Handle the SOAP response, maybe extract tokens from it or handle errors.
             return processSOAPResponseForUserDetails(response);
@@ -645,8 +615,8 @@ public class SOAPClientService {
         }
     }
 
-    private UserDTO processSOAPResponseForUserDetails(CloseableHttpResponse response) throws Exception {
-        String responseBody = EntityUtils.toString(response.getEntity());
+    private UserDTO processSOAPResponseForUserDetails(Response response) throws Exception {
+        String responseBody = response.body().string();
         return UserResponseParser.extractUserDetailsFromResponse(responseBody);
     }
 }

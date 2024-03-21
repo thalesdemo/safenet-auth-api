@@ -14,8 +14,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPMessage;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -29,6 +27,8 @@ import com.thalesdemo.safenet.token.api.dto.TokenDataDTO;
 import com.thalesdemo.safenet.token.api.request.GetTokensSoapRequest;
 import com.thalesdemo.safenet.token.api.request.GetTotalTokensSoapRequest;
 import com.thalesdemo.safenet.token.api.util.TokenStorage;
+
+import okhttp3.Response;
 
 @Service
 public class TokenService {
@@ -62,7 +62,7 @@ public class TokenService {
         try {
             SOAPMessage request = GetTokensSoapRequest.createGetTokensRequest(state, type, serial, container,
                     organization, startRecord, pageSize);
-            CloseableHttpResponse response = soapClientService.sendSOAPRequest(request);
+            Response response = soapClientService.sendSOAPRequestOkHttp(request);
 
             // Handle the SOAP response, maybe extract tokens from it or handle errors.
             return processSOAPResponse(response);
@@ -95,8 +95,8 @@ public class TokenService {
         return allTokens;
     }
 
-    private List<TokenDataDTO> processSOAPResponse(CloseableHttpResponse response) throws Exception {
-        String responseBody = EntityUtils.toString(response.getEntity());
+    private List<TokenDataDTO> processSOAPResponse(Response response) throws Exception {
+        String responseBody = response.body().string();
         return extractTokensFromResponseBody(responseBody);
     }
 
@@ -147,8 +147,8 @@ public class TokenService {
             SOAPMessage request = GetTotalTokensSoapRequest.createGetTotalTokensRequest(state, type, serial, container,
                     organization);
 
-            CloseableHttpResponse response = soapClientService.sendSOAPRequest(request);
-            String responseBody = EntityUtils.toString(response.getEntity());
+            Response response = soapClientService.sendSOAPRequestOkHttp(request);
+            String responseBody = response.body().string();
             logger.log(Level.FINE, "SOAP GetOrganizationTotalTokenCount Response Header:\n{0}", response);
             logger.log(Level.FINE, "SOAP GetOrganizationTotalTokenCount Response Body:{0}", responseBody);
 

@@ -3,7 +3,7 @@ participant "AuthenticatorController" as Client
 participant "SOAPClientService" as SOAPService
 participant "ConfigService" as Config
 participant "SOAPConfiguration" as SOAPConfig
-participant "HttpRequestUtil" as HTTPUtil
+participant "OkHttpUtil" as HTTPUtil
 participant "AuthenticationOptions" as AuthOptions
 
 Client -> SOAPService : getOptionsListByOwner(userName, org, timeout)
