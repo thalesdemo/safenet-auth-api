@@ -51,7 +51,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.AdditionalPropertiesValue;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -169,7 +168,7 @@ public class AuthenticateController {
 			})
 	})
 	@ApiResponse(responseCode = "401", content = @Content, description = "You have not authenticated to the API using the header X-API-Key.")
-	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(schema = @Schema(type = "null", additionalProperties = AdditionalPropertiesValue.FALSE))) // AdditionalPropertiesValue.FALSE)))
+	@ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to malformed JSON data.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiErrorResponse.class))) // AdditionalPropertiesValue.FALSE)))
 	@ApiResponse(responseCode = "503", description = "The service is currently unavailable.", content = @Content)
 
 	@JsonView(ResponseCodeViews.Standard.class)
