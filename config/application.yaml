@@ -1,0 +1,73 @@
+encryption:
+  secret-key: ${ENCRYPTION_SECRET_KEY} # Must be a 256-bit key for AES-256-GCM
+
+server:
+  port: <application-port-number> # HTTP(s) port, you can use any available port
+  ssl:
+    enabled: <application-enable-ssl> # true or false
+    key-store: file:<path-to-pkcs12-file>
+    key-store-type: PKCS12
+    encrypted-key-store-password: <encrypted-key-store-password>
+    key-alias: <key-alias> # e.g. tomcat
+
+network-filter:
+  enable-ip-based-filtering: false
+  allowed-ip-ranges:
+    - 127.0.0.1/32
+    - ::1/128
+
+  enable-x-forwarded-for-filtering: false
+  strict-enforcement-x-forwarded-for-filtering: false
+  allowed-x-forwarded-for-ranges:
+    - 127.0.0.1/32
+
+safenet:
+  api:
+    resource-name: Authentication Gateway
+    key-hash: <safenet-api-key-hash>
+
+    logging: <application-logging-level>
+
+  token-validator:
+    ini-path: <install-dir>/config/linux.ini
+
+  bsidca:
+    base-url: <safenet-base-url>/bsidca/bsidca.asmx
+    virtual-server-name: <safenet-virtual-server-name>
+    connection-timeout: 15 # in seconds
+    connection-page-size: 100 # number of records per page
+    scheduling:
+      ping-interval: 60 # in seconds
+      ping-timeout: 10 # in seconds
+      ping-retries: 1 # number of retries
+      ping-method: GET # Either GET or POST (case-insensitive)
+      cron-inventory: "0 */5 * * * ?" # Every 5 minutes
+    token:
+      storage-file: <install-dir>/tokens.enc.json
+
+  operator:
+    encrypted-email: <safenet_encrypted_operator_email>
+    encrypted-password: <safenet_encrypted_operator_password>
+
+  authentication-options:
+    defaultPresentationType: "code"
+    tokenTypeMappings:
+      MP:
+        - "code"
+      MobilePASS:
+        - "code"
+        - "push"
+      eToken:
+        - "code"
+      GrIDsure:
+        - "grid"
+      RADIUS:
+        - "code"
+      SMS:
+        - "voice"
+        - "sms"
+        - "email"
+      # Add more mappings as needed
+      
+  user-lockout:
+    max-failed-attempts: <safenet-user-max-failed-attempts>

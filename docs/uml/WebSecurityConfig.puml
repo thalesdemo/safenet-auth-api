@@ -1,0 +1,61 @@
+@startuml security_flow_sequence
+participant Client
+participant SpringSecurity as "Spring Security Filter"
+participant ApiKeyAuth as "ApiKeyAuthService"
+participant BCrypt
+participant IpFilter as "IpAndHeaderBasedFilter"
+participant Http as "HttpServletRequest"
+participant Config as "NetworkFilterConfig"
+
+== API Key Verification ==
+Client -> SpringSecurity : HTTP Request with X-API-Key header
+activate SpringSecurity
+SpringSecurity -> ApiKeyAuth : checkApiKey(Http)
+activate ApiKeyAuth
+ApiKeyAuth -> BCrypt : matches(headerValue, apiKeyHash)
+BCrypt --> ApiKeyAuth : apiKeyMatches
+deactivate ApiKeyAuth
+alt apiKeyMatches is true
+    SpringSecurity -> IpFilter : continue with the filter chain
+else apiKeyMatches is false
+    SpringSecurity -> Client : Return 401 Unauthorized
+end
+
+== IP Whitelisting ==
+IpFilter -> Config : isEnableIpBasedFiltering()
+Config --> IpFilter : ipFilteringEnabled
+alt ipFilteringEnabled is true
+    IpFilter -> Http : getRemoteAddr()
+    Http --> IpFilter : remoteIp
+    IpFilter -> Config : getAllowedIpRanges()
+    Config --> IpFilter : allowedIpRanges
+    IpFilter -> IpFilter : isIpAllowed(remoteIp, allowedIpRanges)
+    alt IP is allowed
+        IpFilter -> SpringSecurity : Continue with filter chain
+    else IP is not allowed
+        IpFilter -> Client : Return 403 Forbidden
+    end
+else ipFilteringEnabled is false
+    SpringSecurity -> IpFilter : Continue with filter chain
+end
+
+== X-Forwarded-For Header Check ==
+IpFilter -> Config : isEnableXForwardedForFiltering()
+Config --> IpFilter : xForwardedFilteringEnabled
+alt xForwardedFilteringEnabled is true
+    IpFilter -> Http : getHeader("X-Forwarded-For")
+    Http --> IpFilter : xForwardedFor
+    IpFilter -> Config : getAllowedXForwardedForRanges()
+    Config --> IpFilter : allowedXForwardedForRanges
+    IpFilter -> IpFilter : isIpAllowed(xForwardedFor, allowedXForwardedForRanges)
+    alt X-Forwarded-For IP is allowed
+        IpFilter -> SpringSecurity : Continue with filter chain
+    else X-Forwarded-For IP is not allowed
+        IpFilter -> Client : Return 403 Forbidden
+    end
+else xForwardedFilteringEnabled is false
+    SpringSecurity -> IpFilter : Continue with filter chain
+end
+
+deactivate SpringSecurity
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+actor User
+participant "Frontend App" as Frontend
+participant "Backend Customer App" as BackendApp
+participant "REST Gateway API" as Gateway
+
+== Health Check ==
+User -> Frontend: Access application
+Frontend -> BackendApp: Request service health status
+BackendApp -> Gateway: GET /api/v1/health/check
+Gateway --> BackendApp: { "health": "ok", ... }
+BackendApp -> Frontend: Confirm API is healthy
+Frontend -> User: Display login page
+
+== User Submits Username ==
+User -> Frontend: Enter username and request authentication options
+Frontend -> BackendApp: Request authentication options for provided username
+BackendApp -> Gateway: GET /api/v1/authenticate/{username}/list-options
+Gateway --> BackendApp: { "options": ["push", "code", ...] }
+BackendApp -> Frontend: Provide authentication options
+Frontend -> User: Display options and prompt for selection
+
+== User Chooses OTP Authentication ==
+User -> Frontend: Select "code" option for authentication
+Frontend -> User: Prompt for OTP code
+
+== Authenticate User ==
+User -> Frontend: Enter OTP code
+Frontend -> BackendApp: Send OTP code for authentication
+BackendApp -> Gateway: POST /api/v1/authenticate/{username}
+Gateway --> BackendApp: { "authenticated": true, ... }
+BackendApp -> Frontend: Confirm user authentication
+Frontend -> User: Display successful authentication message
+
+@enduml

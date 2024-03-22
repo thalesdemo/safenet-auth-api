@@ -1,0 +1,63 @@
+@startuml AuthenticateClassDiagram
+package com.thalesdemo.safenet.auth.api {
+    class Authenticate {
+        ' The CRYPTOCard API instance.
+        -api : CRYPTOCardAPI
+        ' The path to the INI file for the CRYPTOCard API configuration.
+        -iniPath : String
+        ' The name of the virtual server for the CRYPTOCard API.
+        -organization : String
+        ' The logger for the Authenticate class.
+        -Log : Logger {static}
+
+        ' Creates a new instance of the Authenticate class with the specified organization and INI file path.
+        +Authenticate(organization : String, iniPath : String)
+        ' Validates a passcode for the specified username and state.
+        +validateCode(username : String, passcode : String, state : String, organization : Optional<String>) : AuthenticationResponse
+        ' Retrieves the GrIDsure challenge data for the specified username and state.
+        +getGridChallengeData(username : String, state : String, organization : Optional<String>) : String
+        ' Converts a GridSure challenge string to a BufferedImage object.
+        +convertGridDataToImage(challenge : String) : BufferedImage
+        ' Retrieves the GrIDsure challenge for the specified user and converts it to a BufferedImage object.
+        +getGridImage(username : String, organization : Optional<String>) : BufferedImage
+        ' Validates the authentication request by sending it to the CRYPTOCard API server.
+        +validateCode(authenticationRequest : AuthenticationRequest) : AuthenticationResponse
+        ' Returns a boolean value indicating whether the server is up or down.
+        +getServerStatus() : boolean
+        ' Sends an authentication request to the CRYPTOCard API server.
+        -sendToServerAuthenticate(username : String, passcode : String, state : String, organization : Optional<String>) : AuthenticationResponse
+        ' Generates fake grid challenge data.
+        -getFakeGridChallenge() : String
+    }
+}
+
+package com.thalesdemo.safenet.auth.commons {
+    class AuthenticationChallenge {
+        .. Represents a challenge issued\nduring the authentication process ..
+    }
+
+    class AuthenticationRequest {
+        .. Represents an authentication\nrequest from a client ..
+    }
+
+    class AuthenticationResponse {
+        .. Represents the server's response\nto an authentication request ..
+    }
+
+    class ResponseCode {
+        .. Defines response codes\nfor the CRYPTOCard API ..
+    }
+}
+
+package CRYPTOCard.API {
+    class CRYPTOCardAPI {
+        .. SafeNet Java SDK\n    (GA release) ..
+    }
+}
+
+Authenticate --> CRYPTOCardAPI : uses
+Authenticate --> AuthenticationResponse : creates & returns
+Authenticate --> AuthenticationChallenge : creates & manipulates
+Authenticate --> AuthenticationRequest : receives & processes
+Authenticate ..> ResponseCode : references
+@enduml

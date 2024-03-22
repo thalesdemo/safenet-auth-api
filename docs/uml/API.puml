@@ -1,0 +1,24 @@
+@startuml
+actor User
+participant "Backend Customer App" as BackendApp
+participant "Gateway API" as Gateway
+
+== Health Check ==
+User -> BackendApp: Request service health status
+BackendApp -> Gateway: GET /api/v1/health/check
+Gateway --> BackendApp: { "health": "ok", ... }
+BackendApp -> User: Display health status
+
+== Retrieve Authentication Options ==
+User -> BackendApp: Request authentication options
+BackendApp -> Gateway: GET /api/v1/authenticate/{username}/list-options
+Gateway --> BackendApp: { "options": ["push", "code", ...] }
+BackendApp -> User: Display authentication options
+
+== Authenticate User ==
+User -> BackendApp: Provide OTP code for authentication
+BackendApp -> Gateway: POST /api/v1/authenticate/{username}
+Gateway --> BackendApp: { "authenticated": true, ... }
+BackendApp -> User: Display authentication result
+
+@enduml

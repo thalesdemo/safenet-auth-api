@@ -1,0 +1,34 @@
+@startuml
+participant "Client" as Client
+participant "HealthController" as HealthCtrl
+participant "Authenticate" as Auth
+participant "Environment" as Env
+participant "PingService" as PingSrv
+participant "HealthResponse" as HealthResp
+
+Client -> HealthCtrl : GET /health/check
+activate HealthCtrl
+
+HealthCtrl -> Auth : getServerStatus()
+activate Auth
+Auth --> HealthCtrl : tokenValidatorStatus
+deactivate Auth
+
+HealthCtrl -> Env : getProperty("safenet.bsidca.scheduling.ping-method")
+activate Env
+Env --> HealthCtrl : useGetMethodFromConfig
+deactivate Env
+
+HealthCtrl -> PingSrv : handlePing(useGetMethodFromConfig)
+activate PingSrv
+PingSrv --> HealthCtrl : bsidcaPingStatus
+deactivate PingSrv
+
+HealthCtrl -> HealthResp : new HealthResponse(healthStatus, tokenValidatorStatus, bsidcaPingStatus)
+activate HealthResp
+HealthResp --> HealthCtrl
+deactivate HealthResp
+
+HealthCtrl --> Client : ResponseEntity<HealthResponse>
+deactivate HealthCtrl
+@enduml

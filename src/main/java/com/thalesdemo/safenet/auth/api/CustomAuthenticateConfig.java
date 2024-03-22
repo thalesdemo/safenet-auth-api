@@ -68,7 +68,7 @@ public class CustomAuthenticateConfig {
      * 
 	 */
 	
-	@Value("${RESOURCE_NAME:}")
+	@Value("${safenet.api.resource-name:}")
 	private String RESOURCE_NAME;
 
 

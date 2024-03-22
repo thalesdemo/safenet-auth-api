@@ -1,0 +1,27 @@
+@startuml CustomTokenValidatorWrapperImplDiagram
+package com.thalesdemo.safenet.auth.api {
+    class CustomTokenValidatorWrapperImpl {
+        ' Extends TokenValidatorWrapperImpl to customize the buildingRequestXmlFromDto method.
+        ' Changes the agentId in the request XML of the TokenValidatorRequestDTO object.
+        - AGENT_ID_AUTH_SDK : String = "8"
+
+        + CustomTokenValidatorWrapperImpl(primaryAuthServerUrl : String, failoverAuthServerUrl : String, key : String)
+        + buildingRequestXmlFromDto(tvAuthDto : TokenValidatorRequestDTO) : String
+    }
+}
+
+package com.safenet.keycloak.agent.tokenvalidatoradapter.dto.tv {
+    class TokenValidatorRequestDTO {
+        .. refer to definition ..
+    }
+}
+
+package com.safenet.keycloak.agent.tokenvalidatoradapter.tvadapter {
+    class TokenValidatorWrapperImpl {
+        .. refer to definition ..
+    }
+}
+
+CustomTokenValidatorWrapperImpl --|> TokenValidatorWrapperImpl : extends
+CustomTokenValidatorWrapperImpl --> TokenValidatorRequestDTO : uses
+@enduml

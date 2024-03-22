@@ -1,0 +1,45 @@
+@startuml authenticate_controller_sequence
+participant Client
+participant SpringController as "AuthenticateController"
+participant AuthService as "Authenticate"
+participant CustomAPI as "CustomAuthenticate"
+participant AuthResponse as "AuthenticationResponse"
+|||
+Client -> SpringController : POST /authenticate/{username} with AuthenticationRequest
+activate SpringController
+SpringController -> AuthService : checkServerStatus()
+activate AuthService
+AuthService --> SpringController : Server Status
+|||
+deactivate AuthService
+
+alt server is down
+    SpringController -> Client : Return 503 Service Unavailable 
+    |||
+else server is up
+    alt pushMode is set or code is 'p'
+        SpringController -> CustomAPI : pushOTP(username, ipAddress, state, pushMode)
+        activate CustomAPI
+        CustomAPI -> AuthResponse : create(success, fail, or challenge)
+        AuthResponse -> CustomAPI : AuthenticationResponse
+        CustomAPI --> SpringController : AuthenticationResponse
+        |||
+        deactivate CustomAPI
+    else no pushMode or code not 'p'
+        SpringController -> AuthService : validateCode(authenticationRequest)
+        activate AuthService
+        AuthService -> AuthResponse : create(success, fail, or challenge)
+        AuthResponse -> AuthService : AuthenticationResponse
+        AuthService --> SpringController : AuthenticationResponse
+        deactivate AuthService
+    end
+    |||
+    alt isAuthenticated
+        SpringController -> Client : Return 200 OK with AuthenticationResponse
+        |||
+    else not authenticated
+        SpringController -> Client : Return 403 Forbidden with AuthenticationResponse
+    end
+end
+deactivate SpringController
+@enduml

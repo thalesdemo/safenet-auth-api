@@ -1,0 +1,27 @@
+@startuml validateCode_sequence
+participant Client
+participant Authenticate
+participant CRYPTOCardAPI
+participant AuthenticationResponse
+
+title Processing Authentication Requests in Authenticate Class
+
+Client -> Authenticate : validateCode(authenticationRequest)
+Activate Authenticate
+
+Authenticate -> Authenticate : sendToServerAuthenticate(username, passcode, state, organization)
+Activate Authenticate
+
+Authenticate -> CRYPTOCardAPI : Authenticate(arrData)
+Activate CRYPTOCardAPI
+CRYPTOCardAPI --> Authenticate : return response data
+Deactivate CRYPTOCardAPI
+
+Authenticate -> AuthenticationResponse : new AuthenticationResponse(status, challenge)
+Activate AuthenticationResponse
+AuthenticationResponse --> Authenticate
+Deactivate AuthenticationResponse
+
+Authenticate --> Client : response
+Deactivate Authenticate
+@enduml

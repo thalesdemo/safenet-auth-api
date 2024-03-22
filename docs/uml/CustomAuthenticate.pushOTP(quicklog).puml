@@ -1,0 +1,37 @@
+@startuml push_otp_quicklog_sequence
+participant Client
+participant CustomAuthenticate
+participant CustomTokenValidatorWrapperImpl
+participant TokenValidatorAPI
+participant AuthenticationResponse
+
+Client -> CustomAuthenticate : pushOTP(username, userIp, authIdUrl, mode)
+activate CustomAuthenticate
+
+alt authIdUrl is null or empty
+    CustomAuthenticate -> CustomAuthenticate : pushChallengeRequest(username, userIp)
+    activate CustomAuthenticate
+    CustomAuthenticate -> CustomTokenValidatorWrapperImpl : authenticate(requestDTO)
+    activate CustomTokenValidatorWrapperImpl
+    CustomTokenValidatorWrapperImpl -> TokenValidatorAPI : POST /pushChallenge
+    TokenValidatorAPI --> CustomTokenValidatorWrapperImpl : authIdUrl
+    deactivate CustomTokenValidatorWrapperImpl
+    CustomAuthenticate --> CustomAuthenticate : return authIdUrl
+    deactivate CustomAuthenticate
+    CustomAuthenticate -> AuthenticationResponse : new AuthenticationResponse(challenge data)
+else
+    CustomAuthenticate -> CustomAuthenticate : decode authIdUrl
+    CustomAuthenticate -> CustomAuthenticate : pushParkingService(authIdUrl)
+    activate CustomAuthenticate
+    CustomAuthenticate --> CustomAuthenticate : authStatus
+    CustomAuthenticate -> CustomAuthenticate : pushChallengeResponse(username, authId, authStatus, userIp)
+    CustomTokenValidatorWrapperImpl -> TokenValidatorAPI : POST /validatePushResponse
+    TokenValidatorAPI --> CustomTokenValidatorWrapperImpl : authentication result
+    deactivate CustomTokenValidatorWrapperImpl
+    CustomAuthenticate --> AuthenticationResponse : new AuthenticationResponse(success or failure)
+    deactivate CustomAuthenticate
+end
+
+CustomAuthenticate --> Client : AuthenticationResponse
+deactivate CustomAuthenticate
+@enduml
