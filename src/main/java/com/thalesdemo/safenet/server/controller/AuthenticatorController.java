@@ -169,9 +169,14 @@ public class AuthenticatorController {
                         .getOptionsListByOwner(username, organization, 10000);
                 List<TokenDTO> tokens = new ArrayList<>();
                 TokenDTO token = new TokenDTO();
-                token.setOptions(AuthenticatorResponses.convertOptionsToStringList(optionsList));
-                tokens.add(token);
-                return ResponseEntity.ok(tokens);
+
+                if (optionsList.isEmpty()) {
+                    return ResponseEntity.ok(tokens); // return empty list if no options are available
+                } else {
+                    token.setOptions(AuthenticatorResponses.convertOptionsToStringList(optionsList));
+                    tokens.add(token);
+                    return ResponseEntity.ok(tokens);
+                }
             } else {
                 List<TokenDTO> tokens = tokenService.getTokensByOwner(username, organization, 10000);
                 return ResponseEntity.ok(tokens);
