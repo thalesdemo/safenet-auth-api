@@ -47,9 +47,6 @@ public class SecurityUtil {
 
         byte[] iv = Base64.getDecoder().decode(parts[0]);
         byte[] encryptedData = Base64.getDecoder().decode(parts[1]);
-        // System.out.println("parts.length: " + parts.length);
-        // System.out.println("Combined data: " + combinedData);
-        // System.out.println("Secret: " + secret);
         Cipher cipher = Cipher.getInstance(ENCRYPTION_ALGO);
         SecretKeySpec keySpec = new SecretKeySpec(Base64.getDecoder().decode(secret), "AES");
         GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(GCM_TAG_LENGTH, iv);

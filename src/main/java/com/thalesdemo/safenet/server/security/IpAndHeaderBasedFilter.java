@@ -78,6 +78,7 @@ public class IpAndHeaderBasedFilter implements Filter {
      */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        // For future use
     }
 
     /**

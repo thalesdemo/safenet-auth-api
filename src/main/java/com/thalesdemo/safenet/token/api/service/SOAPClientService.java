@@ -45,6 +45,10 @@ import okhttp3.ResponseBody;
 @Service
 public class SOAPClientService {
 
+    private static final String VOICE_LABEL = "voice";
+    private static final String SMS_LABEL = "sms";
+    private static final String EMAIL_LABEL = "email";
+
     private static final Logger logger = Logger.getLogger(SOAPClientService.class.getName());
 
     @Autowired
@@ -80,7 +84,6 @@ public class SOAPClientService {
             configService.clearSensitiveData(decryptedEmail);
             configService.clearSensitiveData(decryptedPassword);
 
-            logger.finest("Setting cookies in SOAPConfiguration to: " + cookies);
             configuration.setCookies(cookies);
 
             return "Connected with cookies: " + cookies + "\n";
@@ -138,8 +141,7 @@ public class SOAPClientService {
         ResponseBody responseBody = response.body();
         String responseBodyString = responseBody != null ? responseBody.string() : "";
 
-        logger.log(Level.INFO, "SOAP Connect() Status Code Response: {0}", statusCode);
-        logger.log(Level.INFO, "SOAP Connect() Response Body:\n{0}", responseBodyString);
+        logger.log(Level.INFO, "SOAP connect() response body:\n{0}", responseBodyString);
 
         try {
             if (statusCode == 200 && responseBodyString.contains("AUTH_SUCCESS")) {
@@ -219,8 +221,7 @@ public class SOAPClientService {
             int statusCode = response.code();
             if (statusCode >= 200 && statusCode < 300) {
                 // Parse the XML content from the response entity
-                String responseContent = response.body().string(); // EntityUtils.toString(response.getEntity(),
-                                                                   // "UTF-8");
+                String responseContent = response.body().string();
                 DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
                 factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
                 factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
@@ -419,8 +420,7 @@ public class SOAPClientService {
     private List<TokenDTO> createTokenDTOs(String userName, String serial, String organization, String type,
             List<String> options) {
         List<TokenDTO> dtos = new ArrayList<>();
-
-        List<String> specialOptions = Arrays.asList("sms", "voice", "email");
+        List<String> specialOptions = Arrays.asList(SMS_LABEL, VOICE_LABEL, EMAIL_LABEL);
 
         // Get token details
         TokenDetailsDTO tokenDetails = this.getTokenDetails(serial, organization);
@@ -491,10 +491,10 @@ public class SOAPClientService {
             String phoneNumber = user != null && user.getMobile() != null ? user.getMobile() : defaultString;
             String email = user != null && user.getEmail() != null ? user.getEmail() : defaultString;
 
-            if (options.contains("sms")) {
+            if (options.contains(SMS_LABEL)) {
                 TokenDTO smsDto = new TokenDTO();
                 smsDto.setSerial(serial);
-                smsDto.setType("sms");
+                smsDto.setType(SMS_LABEL);
                 smsDto.setPhoneNumber(phoneNumber); // Ideally, fetch the actual number related to the token
                 smsDto.setState(state);
                 smsDto.setUnlockTime(unlockTime);
@@ -503,10 +503,10 @@ public class SOAPClientService {
                 dtos.add(smsDto);
             }
 
-            if (options.contains("voice")) {
+            if (options.contains(VOICE_LABEL)) {
                 TokenDTO voiceDto = new TokenDTO();
                 voiceDto.setSerial(serial);
-                voiceDto.setType("voice");
+                voiceDto.setType(VOICE_LABEL);
                 voiceDto.setPhoneNumber(phoneNumber); // Fetch the phone number for VOICE, same or differently
                 voiceDto.setState(state);
                 voiceDto.setUnlockTime(unlockTime);
@@ -515,10 +515,10 @@ public class SOAPClientService {
                 dtos.add(voiceDto);
             }
 
-            if (options.contains("email")) {
+            if (options.contains(EMAIL_LABEL)) {
                 TokenDTO emailDto = new TokenDTO();
                 emailDto.setSerial(serial);
-                emailDto.setType("email");
+                emailDto.setType(EMAIL_LABEL);
                 emailDto.setEmail(email); // Fetch the actual email related to the token
                 emailDto.setState(state);
                 emailDto.setUnlockTime(unlockTime);

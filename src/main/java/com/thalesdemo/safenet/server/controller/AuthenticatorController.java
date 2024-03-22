@@ -64,61 +64,61 @@ public class AuthenticatorController {
         this.env = env;
     }
 
-    private static final String tokenListExample = """
+    private static final String TOKEN_LIST_EXAMPLE = """
             [
-               {
-                 "type": "options",
-                 "options": [
-                   "sms",
-                   "email",
-                   "voice",
-                   "grid",
-                   "push",
-                   "code"
-                 ],
-                 "remaining_attempts": 2,
-                 "num_total_failures": 1,
-                 "max_attempt_policy": 3
-               },
-               {
-                   "type": "email",
-                   "email_address": "hello@onewelco.me",
-                   "serial_number": "1000000000",
-                   "last_auth_success": "2024-03-02T00:00:01.00-07:00",
-                   "failed_attempts": 1,
-                   "state": "active"
-               },
-               {
-                   "type": "mobilepass",
-                   "serial_number": "1000000001",
-                   "operating_system": "macOS",
-                   "push_otp_capable": true,
-                   "last_auth_success": "2024-03-01T19:00:00.00-07:00",
-                   "failed_attempts": 0,
-                   "state": "suspended"
-               },
-               {
-                 "type": "sms",
-                 "phone_number": "+1-111-222-3333",
-                 "serial_number": "1000000000",
-                 "last_auth_success": "2024-03-02T00:00:01.00-07:00",
-                 "failed_attempts": 1,
-                 "state": "active"
-               },
-               {
-                 "type": "voice",
-                 "phone_number": "+1-111-222-3333",
-                 "serial_number": "1000000000",
-                 "last_auth_success": "2024-03-02T00:00:01.00-07:00",
-                 "failed_attempts": 1,
-                 "state": "active"
-               }
+                {
+                "type": "options",
+                    "options": [
+                    "sms",
+                    "email",
+                    "voice",
+                    "grid",
+                    "push",
+                    "code"
+                    ],
+                    "remaining_attempts": 2,
+                    "num_total_failures": 1,
+                    "max_attempt_policy": 3
+                },
+                {
+                    "type": "email",
+                    "email_address": "hello@onewelco.me",
+                    "serial_number": "1000000000",
+                    "last_auth_success": "2024-03-02T00:00:01.00-07:00",
+                    "failed_attempts": 1,
+                    "state": "active"
+                },
+                {
+                    "type": "mobilepass",
+                    "serial_number": "1000000001",
+                    "operating_system": "macOS",
+                    "push_otp_capable": true,
+                    "last_auth_success": "2024-03-01T19:00:00.00-07:00",
+                    "failed_attempts": 0,
+                    "state": "suspended"
+                },
+                {
+                    "type": "sms",
+                    "phone_number": "+1-111-222-3333",
+                    "serial_number": "1000000000",
+                    "last_auth_success": "2024-03-02T00:00:01.00-07:00",
+                    "failed_attempts": 1,
+                    "state": "active"
+                },
+                {
+                    "type": "voice",
+                    "phone_number": "+1-111-222-3333",
+                    "serial_number": "1000000000",
+                    "last_auth_success": "2024-03-02T00:00:01.00-07:00",
+                    "failed_attempts": 1,
+                    "state": "active"
+                }
             ]
             """;
 
     @Operation(summary = "Retrieve authentication options by user", description = "Fetch available authentication options for a specific user. Can optionally filter by organization.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved options", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TokenDTO.class)), examples = @ExampleObject(description = "Success", value = tokenListExample))),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved options", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = TokenDTO.class)), examples = @ExampleObject(description = "Success", value = TOKEN_LIST_EXAMPLE))),
             @ApiResponse(responseCode = "400", description = "The request was invalid or incomplete, possibly due to incomplete or malformed data.", content = @Content(schema = @Schema(type = "object", additionalProperties = Schema.AdditionalPropertiesValue.FALSE))),
             @ApiResponse(responseCode = "401", description = "You have not authenticated to the API using the header X-API-Key.", content = @Content),
             @ApiResponse(responseCode = "500", description = "An unexpected error occurred while fetching the user's token options.", content = @Content),
@@ -163,7 +163,7 @@ public class AuthenticatorController {
         }
 
         try {
-            // TODO: fix timeout to be configurable from application.properties
+            // TODO: fix timeout to be configurable from application.yaml
             if (compactResponse) {
                 List<AuthenticatorResponses.AuthenticationOption> optionsList = tokenService
                         .getOptionsListByOwner(username, organization, 10000);

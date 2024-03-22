@@ -1,11 +1,10 @@
 package com.thalesdemo.safenet.auth.api;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-
 
 @Component
 public class PropertiesInitializer {
@@ -16,11 +15,11 @@ public class PropertiesInitializer {
      * The logger instance used to log messages in this class.
      */
 
-    private static final Logger Log = Logger.getLogger(AuthenticateConfig.class.getName());
+    private static final Logger logger = Logger.getLogger(PropertiesInitializer.class.getName());
 
-    @Value("${safenet.token-validator.ini-path:}")
+    @Value("${safenet.token-validator.ini-path}")
     private void setIniPath(String iniPath) {
-        System.out.println("Setting iniPath: " + iniPath); // Just for visualization
+        logger.log(Level.INFO, "INI configuration path to: {0}", iniPath); // Just for visualization
         this.iniPath = iniPath;
         AuthenticateConfig.setIniPath(this.iniPath);
     }
@@ -28,7 +27,7 @@ public class PropertiesInitializer {
     @PostConstruct
     private void postConstruct() {
         if (this.iniPath == null || this.iniPath.trim().isEmpty()) {
-            Log.warning("safenet.token-validator.ini-path not found in properties/yml file.");
+            logger.warning("Property safenet.token-validator.ini-path not found in application.yaml.");
         }
     }
 }

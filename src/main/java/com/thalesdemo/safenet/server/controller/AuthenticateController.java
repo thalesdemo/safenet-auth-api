@@ -26,7 +26,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.http.HttpException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -66,53 +65,38 @@ public class AuthenticateController {
 
 	private static final Logger Log = Logger.getLogger(AuthenticateController.class.getName());
 
-	/**
-	 * An instance of the HealthController class for use in this controller.
-	 */
-	// @Autowired
-	// private HealthController healthController;
-
-	/**
-	 * An instance of the Authenticate class for use in this controller.
-	 */
-
 	private final Authenticate api;
 
-	/**
-	 * An instance of the CustomAuthenticate class for use in this controller.
-	 */
-
-	@Autowired
-	private CustomAuthenticate customApi;
+	private final CustomAuthenticate customApi;
 
 	/**
-	 * An instance of the HttpServletRequest class for use in this controller.
+	 * Constructs a new AuthenticateController instance with specified dependencies
+	 * injected.
+	 * 
+	 * This constructor initializes the AuthenticateController with instances of the
+	 * Authenticate and CustomAuthenticate classes.
+	 * It demonstrates constructor-based dependency injection, which is recommended
+	 * for mandatory dependencies.
+	 * This approach ensures that the AuthenticateController is always in a fully
+	 * initialized state.
+	 * 
+	 * @param api       An instance of the Authenticate class for user
+	 *                  authentication. Must not be null.
+	 * @param customApi An instance of the CustomAuthenticate class for custom
+	 *                  authentication mechanisms. Must not be null.
+	 * 
+	 * @throws NullPointerException if either the api or customApi argument is null,
+	 *                              ensuring that the essential dependencies are not
+	 *                              missing.
+	 * 
+	 * @implNote The dependencies are injected by the Spring framework when the
+	 *           AuthenticateController is constructed.
+	 *           Constructor injection allows for immutable field assignments and
+	 *           enhances testability by allowing easy mock implementations.
 	 */
-
-	@Autowired
-	private HttpServletRequest request;
-
-	/**
-	 * Constructs a new AuthenticateController instance with the specified
-	 * Authenticate dependency injected.
-	 * 
-	 * @param api An instance of the Authenticate class to be used for user
-	 *            authentication.
-	 *            This argument is non-null and is assigned to a final field called
-	 *            "api".
-	 * 
-	 * @throws NullPointerException if the api argument is null.
-	 * 
-	 * @implNote This constructor is annotated with "@Autowired", which is an
-	 *           implicit way of declaring
-	 *           a constructor-based dependency injection. The dependency is
-	 *           injected by the Spring framework
-	 *           when the AuthenticateController is constructed.
-	 */
-
-	public AuthenticateController(Authenticate api) {
-		Objects.requireNonNull(api, "Authenticate dependency cannot be null.");
-		this.api = api;
+	public AuthenticateController(Authenticate api, CustomAuthenticate customApi) {
+		this.api = Objects.requireNonNull(api, "Authenticate dependency cannot be null.");
+		this.customApi = Objects.requireNonNull(customApi, "CustomAuthenticate dependency cannot be null.");
 	}
 
 	/**
@@ -120,30 +104,25 @@ public class AuthenticateController {
 	 * authentication server.
 	 *
 	 * This endpoint accepts a username as a path parameter and an optional
-	 * AuthenticationRequest object
-	 * as a request body. If the request body is empty or the code field in the
-	 * request body is empty,
-	 * this method initiates a new authentication challenge by sending a request to
-	 * the SafeNet
-	 * authentication server.
+	 * AuthenticationRequest object as a request body. If the request body is empty
+	 * or the code field in the request body is empty, this method initiates a new
+	 * authentication challenge by sending a request to the SafeNet authentication
+	 * server.
 	 * 
 	 * If the request body contains a non-empty code field, this method validates
 	 * the provided code against the challenge sent by the authentication server.
 	 *
 	 * The result of the authentication is returned as an AuthenticationResponse
-	 * object. If the
-	 * authentication was successful, the response object contains the respective
-	 * return codes
-	 * that can be used to validate access to the protected endpoint in the client
-	 * application.
+	 * object. If the authentication was successful, the response object contains
+	 * the respective return codes that can be used to validate access to the
+	 * protected endpoint in the client application.
 	 * 
 	 * If the authentication was not successful and a challenge is required, the
-	 * response object
-	 * contains challenge data and information to be displayed to the user.
+	 * response object contains challenge data and information to be displayed to
+	 * the user.
 	 * 
 	 * If the authentication was not successful and no challenge is required, the
-	 * response object
-	 * contains an error message.
+	 * response object contains an error message.
 	 * 
 	 * @param username              The username of the user to authenticate.
 	 * @param authenticationRequest The authentication request object used in the
@@ -191,7 +170,8 @@ public class AuthenticateController {
 							"challenge-response" })) @RequestParam(value = "push_mode", required = false) String pushMode,
 
 			@Parameter(description = "The authentication request object used in the request body of the /authenticate endpoint. "
-					+ "The request body is optional for challenge requests.") @RequestBody(required = false) @Schema(example = ResponseExamples.Authentication.AUTH_REQUEST) AuthenticationRequest authenticationRequest) {
+					+ "The request body is optional for challenge requests.") @RequestBody(required = false) @Schema(example = ResponseExamples.Authentication.AUTH_REQUEST) AuthenticationRequest authenticationRequest,
+			HttpServletRequest request) {
 
 		// Log that a POST request is incoming for the specified username.
 		Log.log(Level.INFO, "Incoming POST /api/v1/authenticate/{0}", username);

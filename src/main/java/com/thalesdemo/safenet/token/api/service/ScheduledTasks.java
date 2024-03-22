@@ -74,7 +74,7 @@ public class ScheduledTasks {
                 return;
 
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Error loading tokens from storage file.", e.getMessage());
+                logger.log(Level.SEVERE, "Error loading tokens from storage file. {0}", e.getMessage());
                 // Handle the IOException as needed (e.g., logging, fallback behavior)
             }
         }
@@ -96,14 +96,14 @@ public class ScheduledTasks {
                 boolean resultPing = clientService.pingConnection(pingTimeoutInSeconds,
                         "get".equalsIgnoreCase(pingMethod));
 
-                logger.log(Level.INFO, "Ping result after {0} seconds: {1} (attempt: {2})",
-                        new Object[] { pingIntervalInSeconds, resultPing, i + 1 });
+                logger.log(Level.INFO, "Result of PingConnection after {0} seconds (attempt #{1}) -> {2}",
+                        new Object[] { pingIntervalInSeconds, i + 1, String.valueOf(resultPing).toUpperCase() });
 
                 if (resultPing) {
                     // Ping successful
                     return true;
                 } else {
-                    logger.log(Level.WARNING, "Ping failed on attempt {0}. Trying to reconnect...", i + 1);
+                    logger.log(Level.WARNING, "PING failed on attempt {0}. Trying to reconnect...", i + 1);
                     clientService.connect();
                 }
             }
@@ -128,9 +128,9 @@ public class ScheduledTasks {
         String organization = null; // Or a default value if necessary
 
         try {
-            if (organization == null) {
-                organization = configService.getOrganization();
-            }
+
+            organization = configService.getOrganization();
+
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error getting organization.", e);
             // Consider re-throwing or handling the exception further as per your use-case

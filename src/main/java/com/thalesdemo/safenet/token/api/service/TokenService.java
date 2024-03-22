@@ -45,13 +45,6 @@ public class TokenService {
 
     private static final Logger logger = Logger.getLogger(TokenService.class.getName());
 
-    // @Autowired
-    // private AuthenticationOptions authenticationOptions;
-
-    // public String getPresentationTypeForTokenType(String tokenType) {
-    // return authenticationOptions.getPresentationType(tokenType);
-    // }
-
     public TokenService(SOAPClientService soapClientService, ConfigService configService) {
         this.soapClientService = soapClientService;
         this.configService = configService;
