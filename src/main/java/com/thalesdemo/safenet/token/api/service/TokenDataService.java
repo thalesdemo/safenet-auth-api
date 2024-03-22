@@ -61,7 +61,8 @@ public class TokenDataService {
                 });
 
             } catch (IllegalArgumentException | AEADBadTagException e) {
-                String errorMsg = "Error (" + e.getClass().getSimpleName() + ") while decrypting tokens from file: " + e.getMessage();
+                String errorMsg = "Error (" + e.getClass().getSimpleName() + ") while decrypting tokens from file: "
+                        + e.getMessage();
                 logger.log(Level.SEVERE, errorMsg);
                 throw new IOException(errorMsg, e); // Include 'e' as the cause
             } catch (IOException e) {
@@ -76,20 +77,6 @@ public class TokenDataService {
 
         return decryptedTokens;
     }
-
-    // public void saveTokensToFile(List<TokenDataDTO> tokens) throws Exception {
-    // ObjectMapper objectMapper = new ObjectMapper();
-    // String jsonData = objectMapper.writeValueAsString(tokens);
-    // String encryptedData = encryptData(jsonData);
-
-    // try (FileOutputStream outputStream = new FileOutputStream(storageFilePath)) {
-    // outputStream.write(encryptedData.getBytes());
-    // logger.info("Stored encrypted tokens to file");
-    // } catch (Exception e) {
-    // logger.log(Level.SEVERE, "Error saving tokens to file: " + e.getMessage(),
-    // e);
-    // }
-    // }
 
     private String encryptData(String data) throws Exception {
         return SecurityUtil.encrypt(data, secretKey);

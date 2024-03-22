@@ -91,6 +91,8 @@ public class OkHttpUtil {
         }
 
         Request request = requestBuilder.build();
+        logRequestOkHttp(request, request.method().equals("GET") ? null : request.body().toString());
+
         Response response = null;
 
         try {
@@ -105,7 +107,6 @@ public class OkHttpUtil {
             throw new IOException(errorString); // Re-throw the exception to allow caller to handle it
         }
 
-        logRequestOkHttp(request, request.method().equals("GET") ? null : request.body().toString());
         logResponseOkHttp(response);
 
         return response;
