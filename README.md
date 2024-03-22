@@ -17,7 +17,7 @@ To deploy the SafeNet RESTful Authentication Gateway, you can use the setup scri
 You can download and run the setup script using `curl`:
 
 ```bash
-curl -O https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/setup.sh && \
+curl -O https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/setup.sh
 bash setup.sh
 ```
 
