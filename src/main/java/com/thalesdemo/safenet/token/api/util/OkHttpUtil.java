@@ -9,8 +9,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.thalesdemo.safenet.token.api.service.SOAPClientService;
-
 import okhttp3.Cookie;
 import okhttp3.CookieJar;
 import okhttp3.HttpUrl;
@@ -23,16 +21,19 @@ import okio.Buffer;
 
 public class OkHttpUtil {
 
-    private static final Logger logger = Logger.getLogger(SOAPClientService.class.getName());
+    private OkHttpUtil() {
+        throw new IllegalStateException("Utility class");
+    }
 
-    private static OkHttpClient createOkHttpClient(Integer timeout, final List<String> cookies) {
+    private static final Logger logger = Logger.getLogger(OkHttpUtil.class.getName());
+
+    private static OkHttpClient createOkHttpClient(Integer timeout) {
         // Implement a basic CookieJar to handle cookies
         CookieJar cookieJar = new CookieJar() {
             private final Map<String, List<Cookie>> cookieStore = new HashMap<>();
 
             @Override
             public void saveFromResponse(HttpUrl url, List<Cookie> cookies) {
-                // Note: This example does not persist cookies between application instances
                 cookieStore.put(url.host(), cookies);
             }
 
@@ -45,109 +46,66 @@ public class OkHttpUtil {
 
         return new OkHttpClient.Builder()
                 .cookieJar(cookieJar)
-                .connectTimeout(timeout, TimeUnit.SECONDS)
-                .readTimeout(timeout, TimeUnit.SECONDS)
-                .writeTimeout(timeout, TimeUnit.SECONDS)
+                .connectTimeout(timeout != null ? timeout : 15, TimeUnit.SECONDS)
+                .readTimeout(timeout != null ? timeout : 15, TimeUnit.SECONDS)
+                .writeTimeout(timeout != null ? timeout : 15, TimeUnit.SECONDS)
                 .build();
     }
 
     public static Response sendGetRequest(String url, List<String> cookies, Integer timeout) throws IOException {
-
-        // write logic to send get request
-        if (timeout == null) {
-            timeout = 15; // Default to 15 seconds if timeout is null
-        }
-
-        OkHttpClient client = createOkHttpClient(timeout, cookies);
+        OkHttpClient client = createOkHttpClient(timeout);
 
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .get();
 
-        // Adding cookies to request if any
-        if (cookies != null && !cookies.isEmpty()) {
-            StringBuilder cookieHeader = new StringBuilder();
-            for (String cookie : cookies) {
-                if (cookieHeader.length() > 0)
-                    cookieHeader.append("; ");
-                cookieHeader.append(cookie);
-            }
-            requestBuilder.addHeader("Cookie", cookieHeader.toString());
-        }
-
-        Request request = requestBuilder.build();
-
         // Execute the request and retrieve the response
-        Response response = null;
-
-        try {
-            response = client.newCall(request).execute();
-            if (!response.isSuccessful()) {
-                logger.warning("GET request to " + request.url() + " failed with status code: " + response.code());
-                // Consider whether to throw an exception or handle this situation differently
-            }
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, "IOException occurred while making HTTP GET request to: " + request.url(), e);
-            // Depending on your error handling policy, you might throw a custom exception
-            // here
-        }
-
-        // Log the request (method placeholder, implement logging as needed)
-        logRequestOkHttp(request, null);
-
-        logResponseOkHttp(response);
-
-        return response;
+        return executeRequest(client, requestBuilder, cookies);
     }
 
     public static Response sendPostRequest(String url, String body, List<String> cookies, String contentType,
             Integer timeout) throws IOException {
-        if (timeout == null) {
-            timeout = 15; // Default to 15 seconds if timeout is null
-        }
+        OkHttpClient client = createOkHttpClient(timeout);
 
-        OkHttpClient client = createOkHttpClient(timeout, cookies);
-
-        // Ensure body is not null to avoid NullPointerException
-        if (body == null) {
-            body = ""; // Defaulting to an empty string if body is null
-        }
-
-        RequestBody requestBody = RequestBody.create(body, MediaType.get(contentType));
+        RequestBody requestBody = RequestBody.create(body != null ? body : "", MediaType.get(contentType));
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .post(requestBody);
 
-        // Adding cookies to request if any
+        // Execute the request and retrieve the response
+        return executeRequest(client, requestBuilder, cookies);
+    }
+
+    private static Response executeRequest(OkHttpClient client, Request.Builder requestBuilder, List<String> cookies)
+            throws IOException {
+        // Manually add cookies if they are provided
         if (cookies != null && !cookies.isEmpty()) {
             StringBuilder cookieHeader = new StringBuilder();
             for (String cookie : cookies) {
-                if (cookieHeader.length() > 0)
+                if (cookieHeader.length() > 0) {
                     cookieHeader.append("; ");
+                }
                 cookieHeader.append(cookie);
             }
             requestBuilder.addHeader("Cookie", cookieHeader.toString());
-            requestBuilder.addHeader("Content-Type", contentType);
         }
 
         Request request = requestBuilder.build();
-
-        // Execute the request and retrieve the response
         Response response = null;
+
         try {
             response = client.newCall(request).execute();
             if (!response.isSuccessful()) {
-                logger.warning("POST request to " + request.url() + " failed with status code: " + response.code());
-                // Consider whether to throw an exception or handle this situation differently
+                logger.warning(request.method() + " request to " + request.url() + " failed with status code: "
+                        + response.code());
             }
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "IOException occurred while making HTTP POST request to: " + request.url(), e);
-            // Depending on your error handling policy, you might throw a custom exception
-            // here
+            String errorString = "IOException occurred while making HTTP request to: " + request.url();
+            logger.log(Level.SEVERE, errorString, e);
+            throw new IOException(errorString); // Re-throw the exception to allow caller to handle it
         }
 
-        // Log the request (method placeholder, implement logging as needed)
-        logRequestOkHttp(request, body);
+        logRequestOkHttp(request, request.method().equals("GET") ? null : request.body().toString());
         logResponseOkHttp(response);
 
         return response;
@@ -155,14 +113,14 @@ public class OkHttpUtil {
 
     private static void logResponseOkHttp(Response response) {
         logger.fine("----- OkHttp Response Start -----");
-        logger.info("Status Code: " + response.code());
-        logger.fine("Response Headers:\n" + response.headers().toString());
+        logger.info("HTTP response code: " + response.code());
+        logger.log(Level.FINE, "Response Headers:\n{0}", response.headers());
 
         // Attempt to log the response body using peekBody
         final long maxPeekBytes = 1_024L; // Define max bytes to peek, adjust as necessary
         try {
             String responseBody = response.peekBody(maxPeekBytes).string();
-            logger.finest("Response Body:\n" + responseBody);
+            logger.log(Level.FINEST, "Response Body:\n{0}", responseBody);
         } catch (IOException e) {
             logger.log(Level.WARNING, "Error reading response body for logging", e);
         }
@@ -176,7 +134,7 @@ public class OkHttpUtil {
         logger.info(request.method() + " " + request.url());
 
         // Print all headers
-        logger.fine("Request Headers:\n" + request.headers().toString());
+        logger.log(Level.FINE, "Request Headers:\n{0}", request.headers());
         // Log the request body if provided and not a GET request (since GET doesn't
         // have a body)
         if (requestBody != null && !requestBody.isEmpty()) {
@@ -186,7 +144,10 @@ public class OkHttpUtil {
             Buffer buffer = new Buffer();
             try {
                 request.body().writeTo(buffer);
-                logger.finest(buffer.readUtf8());
+                if (buffer.readUtf8().length() > 0) {
+                    String requestBodyString = buffer.readUtf8();
+                    logger.finest(requestBodyString);
+                }
             } catch (IOException e) {
                 logger.warning("Failed to read request body for logging.");
             }
