@@ -72,6 +72,10 @@ public class OkHttpUtil {
                 .url(url)
                 .post(requestBody);
 
+        if (contentType != null) {
+            requestBuilder.addHeader("Content-Type", contentType);
+        }
+
         // Execute the request and retrieve the response
         return executeRequest(client, requestBuilder, cookies);
     }
