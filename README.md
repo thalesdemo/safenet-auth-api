@@ -14,10 +14,10 @@ This microservice is a REST-based solution that allows for secure and efficient 
 
 To deploy the SafeNet RESTful Authentication Gateway, you can use the setup script available in our GitHub repository. This script will guide you through the installation process.
 
-You can download and run the [setup script](https://github.com/thalesdemo/safenet-auth-api/blob/v0.1.0/setup.sh) using `curl`:
+You can download and run the [setup script](https://github.com/thalesdemo/safenet-auth-api/blob/v0.2.0/setup.sh) using `curl`:
 
 ```bash
-curl -O https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.1.0/setup.sh
+curl -O https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.2.0/setup.sh
 bash setup.sh
 ```
 
@@ -27,7 +27,7 @@ bash setup.sh
 
 To view the API documentation and all available endpoints, open your web browser and go to http://localhost:8888.
 
-![example.gif](https://github.com/thalesdemo/safenet-auth-api/blob/v0.1.0/img/example.gif)
+![example.gif](https://github.com/thalesdemo/safenet-auth-api/blob/v0.2.0/img/example.gif)
 
 <h2>Contact Us</h2>
 If you have any feedback to share or would like to request new features, please feel free to reach out to us at <a href="mailto:hello@onewelco.me">hello@onewelco.me</a>. We welcome your input!
