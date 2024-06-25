@@ -224,18 +224,21 @@ public class AuthenticateController {
 		String message = "Processing request body as: " + authenticationRequest.toString();
 		Log.fine(message);
 
-		// If the request is a push authentication request, handle it differently. Push
-		// is not supported by the official SafeNet Java API.
-		// Push is triggered by sending the code "p" (or "P") in the request body or by
-		// setting the push_mode query parameter.
+		// This section handles authentication requests, differentiating between standard push OTP (official lib) and 
+		// customized "challenge-response" push OTP, along with regular validation.
 		AuthenticationResponse serverResponse = null;
-		if (pushMode != null || "p".equalsIgnoreCase(authenticationRequest.getCode())) {
-			Log.info("Push OTP authentication request detected for user: " + authenticationRequest.getUsername());
+		// Check if the pushMode is explicitly set to "challenge-response"
+		if ("challenge-response".equalsIgnoreCase(pushMode)) {
+		    // Use custom API for challenge-response mode for enhanced user experience
+			Log.info("Challenge-response push OTP authentication request detected for user: " + authenticationRequest.getUsername());
 			serverResponse = this.customApi.pushOTP(authenticationRequest.getUsername(), ipAddress,
-					authenticationRequest.getState(), pushMode);
+													authenticationRequest.getState(), pushMode);
+		} else if (pushMode != null || "p".equalsIgnoreCase(authenticationRequest.getCode())) {
+		    // Use standard API for any non-null pushMode or when request code is "p"
+			Log.info("Push OTP authentication request detected for user: " + authenticationRequest.getUsername());
+			serverResponse = this.api.validateCode(authenticationRequest);
 		} else {
-			// Validate the authentication code with the official Java API and get the
-			// server's response.
+		    // Default validation through standard API when pushMode is null and code is not "p"
 			serverResponse = this.api.validateCode(authenticationRequest);
 		}
 
