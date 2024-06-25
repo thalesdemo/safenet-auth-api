@@ -26,8 +26,6 @@ package com.thalesdemo.safenet.auth.api {
         +getServerStatus() : boolean
         ' Sends an authentication request to the CRYPTOCard API server.
         -sendToServerAuthenticate(username : String, passcode : String, state : String, organization : Optional<String>) : AuthenticationResponse
-        ' Generates fake grid challenge data.
-        -getFakeGridChallenge() : String
     }
 }
 

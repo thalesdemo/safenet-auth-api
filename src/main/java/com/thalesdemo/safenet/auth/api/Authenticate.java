@@ -28,6 +28,8 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.thalesdemo.safenet.auth.commons.AuthenticationChallenge;
 import com.thalesdemo.safenet.auth.commons.AuthenticationRequest;
 import com.thalesdemo.safenet.auth.commons.AuthenticationResponse;
@@ -40,6 +42,25 @@ public class Authenticate {
 	 */
 
 	private static final Logger Log = Logger.getLogger(Authenticate.class.getName());
+
+	/**
+	 * This field stores the resource name as a string. The value of this field is retrieved from an environment variable
+	 * called "RESOURCE_NAME" using the Spring @Value annotation.
+     * 
+     * This is the name of the resource that is being protected by the authentication service and which will be used in
+     * the push authentication request message. 
+     * 
+     * If the orgCode query parameter is present in the TokenValidator URL, and the resource name is not specified in the
+     * environment variable RESOURCE_NAME, then the push authentication request message will not contain the resource 
+     * name and show blank. For example:
+     * 
+     *     Push authentication request message without resource name:
+     *          Login request from [missing resource name]
+     * 
+	 */
+	
+	@Value("${safenet.api.resource-name:}")
+	private String resourceName;
 
 	/**
 	 * Defines response codes for the CRYPTOCard API.
@@ -144,36 +165,15 @@ public class Authenticate {
 			Log.warning("Empty passcode has been detected. Triggering challenge-response.");
 		}
 
-		// If the username is "anonymousUser", check the state of the authentication
-		// request
-		if (username.equals("anonymousUser")) {
-			// If the state is "FAKE_CHALLENGE", log a warning and return an
-			// AuthenticationResponse with AUTH_FAILURE
-			if (state.equals(ResponseCode.FAKE_CHALLENGE.getName())) {
-				Log.warning(
-						"Discarding and rejecting authentication request since this is the second fake challenge attempt");
-				return new AuthenticationResponse(username, ResponseCode.AUTH_FAILURE);
-			}
-			// If the state is not "FAKE_CHALLENGE", log a warning and return an
-			// AuthenticationResponse with a fake challenge
-			else {
-				Log.warning(
-						"Discarding and issuing fake authentication challenge since this is the first challenge attempt");
-				AuthenticationChallenge fakeChallenge = new AuthenticationChallenge(
-						ResponseCode.FAKE_CHALLENGE.getName(), this.getFakeGridChallenge(),
-						ResponseCode.FAKE_CHALLENGE.getName());
-				return new AuthenticationResponse(username, ResponseCode.FAKE_CHALLENGE, fakeChallenge);
-			}
-		}
-
 		// Create an array of strings to hold the request data and response values
-		String[] arrData = new String[11];
+		String[] arrData = new String[12];
 
 		// Add the input values to the array
 		arrData[0] = username; // username (input)
 		arrData[1] = effectiveOrganization; // organization (input)
 		arrData[2] = passcode; // passcode (input)
 		arrData[10] = ""; // client IP address (input)
+		arrData[11] = resourceName; // Resource name for push OTP (input)
 
 		// Add placeholders for the output values
 		arrData[3] = ""; // challenge (output)
@@ -276,7 +276,7 @@ public class Authenticate {
 	 * @return the GrIDsure challenge data
 	 */
 
-	public String getGridChallengeData(String username, String state, Optional<String> organization) {
+	public String getGridChallengeData(String username, String state, Optional<String> organization) throws Exception {
 
 		// Call sendToServerAuthenticate to send an authentication request to the
 		// CRYPTOCard API server
@@ -292,22 +292,7 @@ public class Authenticate {
 		}
 
 		// If the challenge name is not "GrIDsure", return a fake grid challenge
-		return this.getFakeGridChallenge();
-	}
-
-	/**
-	 * Generates fake grid challenge data.
-	 *
-	 * @return a string containing fake grid challenge data
-	 */
-
-	private String getFakeGridChallenge() {
-		/*
-		 * TODO: Make an option to switch to offer generation of random valid data.
-		 * For now, we are returning a hardcoded fake data.
-		 */
-		final String fake_data = ".............G4M3..0V3R.............";
-		return fake_data;
+		throw new Exception("Invalid challenge name: " + challengeName);
 	}
 
 	/**
@@ -338,9 +323,12 @@ public class Authenticate {
 	 * @return a BufferedImage object representing the user's GrIDsure challenge
 	 *         If an error occurs while converting the GrIDsure challenge to an
 	 *         image, an empty image with a size of 0 x 0 is returned.
+	 * 
+	 * @throws Exception if an error occurs while retrieving the GrIDsure challenge
+	 * 				 data
 	 */
 
-	public BufferedImage getGridImage(String username, Optional<String> organization) {
+	public BufferedImage getGridImage(String username, Optional<String> organization) throws Exception {
 		String gridData = this.getGridChallengeData(username, "", organization);
 		return this.convertGridDataToImage(gridData);
 	}
