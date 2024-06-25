@@ -155,7 +155,7 @@ ensure_dir_exists "$install_dir/config"
 ensure_dir_exists "$install_dir/logs"
 
 # Download necessary files
-download_to_dir "https://github.com/thalesdemo/safenet-auth-api/releases/download/"$LATEST_VERSION_API"/safenet-auth-api-"$LATEST_VERSION_API"-alt.jar" "$install_dir/safenet-auth-api.jar"
+download_to_dir "https://github.com/thalesdemo/safenet-auth-api/releases/download/"$LATEST_VERSION_API"/safenet-auth-api-"$LATEST_VERSION_API".jar" "$install_dir/safenet-auth-api.jar"
 download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.2.0/config/application.yaml" "$install_dir/config/application.yaml"
 download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.2.0/config/linux.ini" "$install_dir/config/linux.ini"
 download_to_dir "https://raw.githubusercontent.com/thalesdemo/safenet-auth-api/v0.2.0/utils/keygen-1.0.jar" "$install_dir/keygen-1.0.jar"
