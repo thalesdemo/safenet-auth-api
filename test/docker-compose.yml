@@ -1,6 +1,6 @@
 services:
   safenet-auth-api:
-    image: thalesdemo/safenet-auth-api:0.2.0
+    image: thalesdemo/safenet-auth-api:0.2.0-arm64
     container_name: safenet-auth-api
     environment:
       ENCRYPTION_SECRET_KEY: ${ENCRYPTION_SECRET_KEY-}

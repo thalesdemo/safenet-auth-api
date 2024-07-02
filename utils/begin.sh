@@ -2,7 +2,7 @@
 
 DOCKER_API_CLIENT_KEY_PATH="/app/secret/client.key"
 DOCKER_API_SERVER_KEY_PATH="/app/secret/server.key"
-TOOL_LOCATION="/app/tools/keygen.jar"
+TOOL_LOCATION="/app/utils/keygen.jar"
 
 function print_welcome_message() {
     local message=$(cat << "EOF" 
@@ -55,30 +55,64 @@ function generate_api_key() {
 }
 
 # Script starts here
-printf '%.0s=' {1..80}
-echo -e "\n"
+# printf '%.0s=' {1..80}
+# echo -e "\n"
 
 # Phase 1: Create or register the api key
-if [ ! -n "$API_KEY_HASH" ]; then
-  if [ -f "$DOCKER_API_SERVER_KEY_PATH" ]; then
-    source "$DOCKER_API_SERVER_KEY_PATH"
-    echo -e "\033[34m [KEY] API_KEY_HASH exists in configuration.\e[0m"
-    if [ -f "$DOCKER_API_CLIENT_KEY_PATH" ]; then
-      rm -f "$DOCKER_API_CLIENT_KEY_PATH"
-      echo -e "\033[34m       > Removed file secret $DOCKER_API_CLIENT_KEY_PATH.\e[0m"
-    fi
-  else
-    echo -e "\e[33m [KEY] API_KEY_HASH does not exist in environment or in configuration.\e[0m"
-    echo -e "\e[33m       > Generating keypair ...\e[0m\n"
-    printf '%.0s=' {1..80}
-    generate_api_key
-  fi
-else
-  echo -e "\033[34m [KEY] Loading API_KEY_HASH defined from environment variable.\e[0m"
-fi
+# if [ ! -n "$API_KEY_HASH" ]; then
+#   if [ -f "$DOCKER_API_SERVER_KEY_PATH" ]; then
+#     source "$DOCKER_API_SERVER_KEY_PATH"
+#     echo -e "\033[34m [KEY] API_KEY_HASH exists in configuration.\e[0m"
+#     if [ -f "$DOCKER_API_CLIENT_KEY_PATH" ]; then
+#       rm -f "$DOCKER_API_CLIENT_KEY_PATH"
+#       echo -e "\033[34m       > Removed file secret $DOCKER_API_CLIENT_KEY_PATH.\e[0m"
+#     fi
+#   else
+#     echo -e "\e[33m [KEY] API_KEY_HASH does not exist in environment or in configuration.\e[0m"
+#     echo -e "\e[33m       > Generating keypair ...\e[0m\n"
+#     printf '%.0s=' {1..80}
+#     generate_api_key
+#   fi
+# else
+#   echo -e "\033[34m [KEY] Loading API_KEY_HASH defined from environment variable.\e[0m"
+# fi
 
 # Phase 2: Set primary URL in config.ini based on environment variable
 sed -i "/PrimaryServer=/c\PrimaryServer=$SAFENET_SERVER_HOST" $JCRYPTO_INI_PATH
+
+
+# TokenValidator Parameters
+protocol="${SAFENET_PRIMARY_AUTH_URL%%://*}"
+full_path="${SAFENET_PRIMARY_AUTH_URL#*://}"
+
+# Check if a port is specified in the base_url
+if [[ "$full_path" =~ :[0-9]+ ]]; then
+    # Extract port
+    safenet_port="${full_path%%/*}"    # Extract everything before the first "/"
+    safenet_port="${safenet_port##*:}" # Extract everything after the last ":"
+
+    # Extract FQDN without port
+    fqdn="${full_path%%:*}"
+else
+    fqdn="${full_path%%/*}"
+    if [[ "$protocol" == "https" ]]; then
+        safenet_port=443
+    else
+        safenet_port=80
+    fi
+fi
+
+# Extract path
+path="${full_path#$fqdn}"
+path="${path#:$safenet_port}"
+
+# Set the values in the config.ini file
+sed -i "/PrimaryServer=/c\PrimaryServer=$fqdn" $JCRYPTO_INI_PATH
+sed -i "/PrimaryServerPort=/c\PrimaryServerPort=$safenet_port" $JCRYPTO_INI_PATH
+sed -i "/PrimaryProtocol=/c\PrimaryProtocol=$protocol" $JCRYPTO_INI_PATH
+sed -i "/PrimaryWebServiceRelativePath=/c\PrimaryWebServiceRelativePath=$path" $JCRYPTO_INI_PATH
+
+cat $JCRYPTO_INI_PATH
 
 # Phase 3: Set log level in config.ini based on environment variable
 if [ "$API_LOG_LEVEL" = "DEBUG" ]; then

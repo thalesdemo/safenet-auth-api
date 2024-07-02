@@ -15,7 +15,7 @@
 # be displayed in the Docker build logs.
 
 # Use a base image as the starting point for the Docker build
-FROM amazoncorretto:11
+FROM amazoncorretto:17
 
 # Set project version as a Docker build option: --build-arg APP_VERSION=x.x.x
 ARG APP_VERSION
@@ -39,21 +39,24 @@ RUN groupadd -g $GROUP_ID appuser && \
 # Create new directories
 RUN mkdir -p /app/config
 RUN mkdir -p /app/secret
-RUN mkdir -p /app/tools
+RUN mkdir -p /app/utils
 
 # Display the extracted version value in the Docker build logs
 RUN echo "Project version is: ${APP_VERSION}"
 
 # Copy the application files and set permissions
-COPY jar/safenet-auth-api-${APP_VERSION}.jar ./safenet-auth-api.jar
-COPY config/linux.ini ./config/config.ini
-COPY tools/keygen-1.0.jar ./tools/keygen.jar
-COPY tools/begin.sh .
+COPY target/safenet-auth-api-${APP_VERSION}.jar ./safenet-auth-api.jar
+COPY config/docker.ini ./config/config.ini
+COPY utils/keygen-1.0.jar ./utils/keygen.jar
+COPY utils/begin.sh .
+COPY utils/EncryptionUtility.java ./utils/EncryptionUtility.java
+
 RUN chmod 700 /app/begin.sh && \
     chmod 700 /app/secret && \
-    chmod 700 /app/tools && \
+    chmod 700 /app/utils && \
     chmod 700 /app/config 
-RUN chmod 600 /app/tools/keygen.jar && \
+RUN chmod 600 /app/utils/keygen.jar && \
+    chmod 600 /app/utils/EncryptionUtility.java && \
     chmod 600 /app/config/config.ini && \
     chmod 600 /app/safenet-auth-api.jar
 
