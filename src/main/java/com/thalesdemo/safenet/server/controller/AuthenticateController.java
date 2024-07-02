@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.thalesdemo.safenet.auth.api.Authenticate;
 import com.thalesdemo.safenet.auth.api.CustomAuthenticate;
+import com.thalesdemo.safenet.auth.commons.AuthenticationChallenge;
 import com.thalesdemo.safenet.auth.commons.AuthenticationRequest;
 import com.thalesdemo.safenet.auth.commons.AuthenticationResponse;
 import com.thalesdemo.safenet.auth.commons.ResponseCode;
@@ -236,10 +237,22 @@ public class AuthenticateController {
 		} else if (pushMode != null || "p".equalsIgnoreCase(authenticationRequest.getCode())) {
 		    // Use standard API for any non-null pushMode or when request code is "p"
 			Log.info("Push OTP authentication request detected for user: " + authenticationRequest.getUsername());
+			authenticationRequest.setCode("p");
 			serverResponse = this.api.validateCode(authenticationRequest);
 		} else {
 		    // Default validation through standard API when pushMode is null and code is not "p"
 			serverResponse = this.api.validateCode(authenticationRequest);
+		}
+
+		// Check if the authentication was successful.
+		boolean isAuthenticated = serverResponse.isAuthenticated();
+
+		// Check if the authentication was denied.
+		boolean isDenied = serverResponse.isDenied();
+
+		// Clear challenge data if the authentication was successful.
+		if (isAuthenticated || isDenied) {
+			serverResponse.setChallenge(new AuthenticationChallenge());
 		}
 
 		// Log the response from the server for debugging purposes.
@@ -251,7 +264,6 @@ public class AuthenticateController {
 		 * If the authentication was authenticated, return an OK response.
 		 * Otherwise, return a FORBIDDEN response.
 		 */
-		boolean isAuthenticated = serverResponse.isAuthenticated();
 		if (isAuthenticated) {
 			return new ResponseEntity<>(serverResponse, HttpStatus.OK);
 		} else {

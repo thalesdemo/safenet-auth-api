@@ -190,6 +190,7 @@ public class Authenticate {
 
 			// Extract the response data from the arrData array
 			String rawMsg = arrData[9];
+			Log.log(Level.FINE, "Raw SafeNet SDK log message -> rawMsg = {0}", rawMsg);
 			int status = Integer.parseInt(arrData[7]);
 			String challengeName = arrData[5];
 			String challengeState = arrData[4];
@@ -201,7 +202,7 @@ public class Authenticate {
 			Log.log(Level.FINE, "challengeName = {0}", challengeName);
 			Log.log(Level.FINE, "challengeData: grid ascii string = {0}", challengeData);
 			Log.log(Level.FINE, "challengeState: output_state -> challenge state variable = {0}", challengeState);
-			Log.log(Level.FINE, "rawMsg: raw log message = {0}", rawMsg);
+
 
 			// Create a new AuthenticationChallenge object and set its properties based on
 			// the response data
