@@ -1,24 +1,17 @@
 services:
   safenet-auth-api:
-    image: thalesdemo/safenet-auth-api:0.2.0
+    image: thalesdemo/safenet-auth-api:latest
     container_name: safenet-auth-api
     environment:
-      ENCRYPTION_SECRET_KEY: ${ENCRYPTION_SECRET_KEY-}
+      ENCRYPTION_SECRET_KEY: ${ENCRYPTION_SECRET_KEY}
       API_SERVER_PORT: ${API_SERVER_PORT}
       JCRYPTO_INI_PATH: /app/config/config.ini
       SAFENET_PRIMARY_AUTH_URL: ${SAFENET_PRIMARY_AUTH_URL}
     volumes:
-      - type: bind
-        source: ${HOST_AGENT_KEY_PATH}
-        target: /app/secret/agent.key
-        read_only: true
-      - type: bind
-        source: ${APPLICATION_YAML_PATH}
-        target: /app/config/application.yml
-        read_only: true
-      - type: bind
-        source: ${HOST_TLS_PKCS12_PATH}
-        target: /app/secret/server.p12
-        read_only: true
+      - ${HOST_AGENT_KEY_PATH}:/app/secret/agent.key:z,ro
+      - ${APPLICATION_YAML_PATH}:/app/config/application.yml:z,ro
+      - ${HOST_TLS_PKCS12_PATH}:/app/secret/server.p12:z,ro
     ports:
       - ${API_SERVER_PORT}:${API_SERVER_PORT}
+
+    network_mode: "host" # optional, useful with ip filtering to base rules on host network ips

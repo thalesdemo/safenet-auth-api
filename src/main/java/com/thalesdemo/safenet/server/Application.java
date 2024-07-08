@@ -30,6 +30,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.thalesdemo.safenet.auth.api.exception.IniFilePathNotFoundException;
+import com.thalesdemo.safenet.server.security.EncryptionKeyValidatorInitializer;
 import com.thalesdemo.safenet.server.security.WebSslPasswordInitializer;
 
 @SpringBootApplication
@@ -37,14 +38,18 @@ import com.thalesdemo.safenet.server.security.WebSslPasswordInitializer;
 @EnableConfigurationProperties
 @EnableScheduling
 public class Application {
-	public static void main(String[] args) {
-		try {
-			SpringApplication application = new SpringApplication(Application.class);
-			application.addInitializers(new WebSslPasswordInitializer());
-			application.run(args);
-		} catch (IniFilePathNotFoundException e) {
-			// System.err.println(e.getMessage());
-			System.exit(1); // Exit with a non-zero status to indicate an error.
-		}
-	}
+    public static void main(String[] args) {
+        try {
+            SpringApplication application = new SpringApplication(Application.class);
+            application.addInitializers(new EncryptionKeyValidatorInitializer());
+            application.addInitializers(new WebSslPasswordInitializer());
+            application.run(args);
+        } catch (IniFilePathNotFoundException e) {
+            // System.err.println(e.getMessage());
+            System.exit(1); // Exit with a non-zero status to indicate an error.
+        } catch (EncryptionKeyValidatorInitializer.EncryptionKeyValidatorException e) {
+            System.err.println(e.getMessage() + " [Error code: " + e.getErrorCode() + "]");
+            System.exit(1); // Exit with a non-zero status to indicate an error.
+        }
+    }
 }
