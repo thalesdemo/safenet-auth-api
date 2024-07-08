@@ -135,7 +135,7 @@ sed -i "/PrimaryProtocol=/c\PrimaryProtocol=$protocol" $JCRYPTO_INI_PATH
 sed -i "/PrimaryWebServiceRelativePath=/c\PrimaryWebServiceRelativePath=$path" $JCRYPTO_INI_PATH
 
 # Debug: Output the modified config.ini file for verification
-cat $JCRYPTO_INI_PATH
+# cat $JCRYPTO_INI_PATH
 
 # Phase 2: Set log level in config.ini based on environment variable
 if [ "$API_LOG_LEVEL" = "DEBUG" ]; then
